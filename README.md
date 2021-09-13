@@ -1,0 +1,2 @@
+# OS2mo Init
+
