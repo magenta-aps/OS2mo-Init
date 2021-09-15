@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "os2mo-init"
+version = "0.0.3"
+description = "Database initialiser for OS2mo"
+authors = ["Magenta <info@magenta.dk>"]
+license = "MPL-2.0"
+readme = "README.md"
+homepage = "https://magenta.dk/"
+repository = "https://git.magenta.dk/rammearkitektur/os2mo-init"
+keywords = ["os2mo"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+click = "^7.1.2"
+raclients = "^0.4.3"
+ra-utils = "^0.4.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+black = "^21.8b0"
+flake8 = "^3.9.2"
+mypy = "^0.910"
+reorder-python-imports = "^2.6.0"
+pre-commit = "^2.15.0"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
