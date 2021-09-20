@@ -31,7 +31,7 @@ from .util import validate_url
         "CLIENT_ID [default: mo]\n"
         "CLIENT_SECRET [required]\n"
         "AUTH_REALM [default: lora]\n"
-        "AUTH_SERVER [default: http://localhost:8080/auth]\n"
+        "AUTH_SERVER [default: http://localhost:8081/auth]\n"
     ),
 )
 @click.option(
