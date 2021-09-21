@@ -76,6 +76,7 @@ async def run(
             client=client,
             name=root_org_name,
             municipality_code=municipality_code,
+            generate_uuid=generate_uuid,
         )
         await ensure_default_facets(
             client=client,
