@@ -7,7 +7,6 @@ from typing import cast
 
 import click
 from pydantic import AnyHttpUrl
-from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import ValidationError
 from ra_utils.headers import TokenSettings
@@ -27,4 +26,3 @@ class LoraTokenSettings(TokenSettings):
 
     client_secret: str
     auth_realm: str = "lora"
-    auth_server: AnyHttpUrl = Field("http://localhost:8081/auth")

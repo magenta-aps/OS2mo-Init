@@ -19,6 +19,7 @@ from .util import validate_url
 
 @click.command(
     context_settings=dict(
+        show_default=True,
         max_content_width=120,
     ),
     epilog=(
@@ -39,7 +40,6 @@ from .util import validate_url
     help="Address of the LoRa host",
     callback=validate_url,
     default="http://localhost:8080",
-    show_default=True,
     envvar="LORA_URL",
     show_envvar=True,
 )
@@ -48,7 +48,6 @@ from .util import validate_url
     help="Name of the root organisation",
     type=click.STRING,
     default="Magenta Aps",
-    show_default=True,
     envvar="ROOT_ORG_NAME",
     show_envvar=True,
 )
@@ -57,7 +56,6 @@ from .util import validate_url
     help="Municipality code of the root organisation",
     type=click.INT,
     default=1234,
-    show_default=True,
 )
 @async_to_sync
 async def run(

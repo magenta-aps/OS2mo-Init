@@ -3,9 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0
 # --------------------------------------------------------------------------------------
 facets = (
-    # From os2mo-data-import-and-export/os2mo_data_import/os2mo_data_import/defaults.py
-    # Should probably either import from DIPEX, or a test ensuring equivalence, but it
-    # is difficult when DIPEX is not made to be imported as a package.
     "org_unit_address_type",
     "employee_address_type",
     "manager_address_type",

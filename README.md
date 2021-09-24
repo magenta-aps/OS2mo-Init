@@ -55,37 +55,10 @@ This project uses [Semantic Versioning](https://semver.org/) with the following 
 
 The fileformat is versioned directly, and the version is exported in the file itself.
 
-<!--
-## Getting Started
-
-TODO: README section missing!
-
-### Prerequisites
-
-
-TODO: README section missing!
-
-### Installing
-
-TODO: README section missing!
-
-## Running the tests
-
-TODO: README section missing!
-
-## Deployment
-
-TODO: README section missing!
-
-## Built With
-
-TODO: README section missing!
-
 ## Authors
 
 Magenta ApS <https://magenta.dk>
 
-TODO: README section missing!
 -->
 ## License
 - This project: [MPL-2.0](LICENSES/MPL-2.0.txt)

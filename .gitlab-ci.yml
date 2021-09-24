@@ -52,17 +52,6 @@ Lint Python:
   script:
     - poetry run pre-commit run --all-files
 
-Lint dockerfiles:
-  extends: .lint-docker
-  stage: lint
-  script:
-    - echo "Running Hadolint, a Dockerfile linter"
-    - echo "For more information about reported errors, visit the Hadolint wiki on https://github.com/hadolint/hadolint/wiki"
-    # Run fd without exec arg to produce a list of files to be linted
-    - fd Dockerfile
-    # Run hadolint on every Dockerfile
-    - fd Dockerfile --exec hadolint --failure-threshold=error
-
 
 # ---------------------------------------------------------------------------
 # Test
