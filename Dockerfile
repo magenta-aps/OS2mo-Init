@@ -1,20 +1,18 @@
-# --------------------------------------------------------------------------------------
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-# --------------------------------------------------------------------------------------
-FROM python:3.9-slim
+FROM python:3.9
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
+WORKDIR /app
+
+ENV POETRY_HOME=/opt/poetry \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1
 
-RUN pip install --no-cache-dir poetry==1.1.10
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python --
 
-WORKDIR /opt
-COPY poetry.lock pyproject.toml ./
-RUN poetry install --no-dev
+COPY pyproject.toml poetry.lock* ./
 
-WORKDIR /app
+RUN /opt/poetry/bin/poetry install --no-root --no-dev
+
 COPY . ./
 ENTRYPOINT ["python", "-m", "os2mo_init"]
