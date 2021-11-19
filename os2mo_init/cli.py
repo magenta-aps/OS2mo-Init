@@ -1,20 +1,15 @@
-# --------------------------------------------------------------------------------------
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-# --------------------------------------------------------------------------------------
+from io import TextIOWrapper
+
 import click
 from pydantic import AnyHttpUrl
 from ra_utils.async_to_sync import async_to_sync
-from ra_utils.generate_uuid import uuid_generator
-from raclients.lora import ModelClient as LoRaModelClient
 
-from .initialisers import ensure_default_classes
-from .initialisers import ensure_default_facets
-from .initialisers import ensure_root_organisation
-from .util import validate_url
-
-# from raclients.modelclientbase import common_session_factory
-# from .util import LoraTokenSettings
+from os2mo_init import initialisers
+from os2mo_init.clients import get_clients
+from os2mo_init.config import get_config
+from os2mo_init.util import validate_url
 
 
 @click.command(
@@ -22,67 +17,131 @@ from .util import validate_url
         show_default=True,
         max_content_width=120,
     ),
-    epilog=(
-        "In addition to the listed environment variables, the program accepts "
-        "parameters from environment variables using the format "
-        "'OS2MO_INIT_<OPTION>'; for example 'OS2MO_INIT_MUNICIPALITY_CODE'. "
-        "Furthermore, the following environment variables are used to "
-        "establish a connection to LoRa:"
-        "\n\n\b\n"  # prevent click rewrapping
-        "CLIENT_ID [default: mo]\n"
-        "CLIENT_SECRET [required]\n"
-        "AUTH_REALM [default: lora]\n"
-        "AUTH_SERVER [default: http://localhost:8081/auth]\n"
-    ),
+)
+@click.option(
+    "--auth-server",
+    help="Keycloak authentication server.",
+    required=True,
+    callback=validate_url,
+    envvar="AUTH_SERVER",
+    show_envvar=True,
+)
+@click.option(
+    "--mo-url",
+    help="OS2mo URL.",
+    required=True,
+    callback=validate_url,
+    envvar="MO_URL",
+    show_envvar=True,
+)
+@click.option(
+    "--client-id",
+    help="Client ID used to authenticate against OS2mo.",
+    required=True,
+    default="dipex",
+    envvar="CLIENT_ID",
+    show_envvar=True,
+)
+@click.option(
+    "--client-secret",
+    help="Client secret used to authenticate against OS2mo.",
+    required=True,
+    envvar="CLIENT_SECRET",
+    show_envvar=True,
+)
+@click.option(
+    "--auth-realm",
+    help="Keycloak realm for OS2mo authentication.",
+    required=True,
+    default="mo",
+    envvar="AUTH_REALM",
+    show_envvar=True,
 )
 @click.option(
     "--lora-url",
-    help="Address of the LoRa host",
+    help="LoRa URL.",
+    required=True,
     callback=validate_url,
-    default="http://localhost:8080",
     envvar="LORA_URL",
     show_envvar=True,
 )
 @click.option(
-    "--root-org-name",
-    help="Name of the root organisation",
-    type=click.STRING,
-    default="Magenta Aps",
-    envvar="ROOT_ORG_NAME",
+    "--lora-client-id",
+    help="Client ID used to authenticate against LoRa.",
+    required=True,
+    default="dipex",
+    envvar="LORA_CLIENT_ID",
     show_envvar=True,
 )
 @click.option(
-    "--municipality-code",
-    help="Municipality code of the root organisation",
-    type=click.INT,
-    default=1234,
+    "--lora-client-secret",
+    help="Client secret used to authenticate against LoRa.",
+    required=True,
+    envvar="LORA_CLIENT_SECRET",
+    show_envvar=True,
+)
+@click.option(
+    "--lora-auth-realm",
+    help="Keycloak realm for LoRa authentication.",
+    required=True,
+    default="lora",
+    envvar="LORA_AUTH_REALM",
+    show_envvar=True,
+)
+@click.option(
+    "--config-file",
+    help="Path to initialisation config file.",
+    type=click.File(),
+    required=True,
+    default="/config/config.yml",
+    envvar="CONFIG_FILE",
+    show_envvar=True,
 )
 @async_to_sync
 async def run(
+    auth_server: AnyHttpUrl,
+    mo_url: AnyHttpUrl,
+    client_id: str,
+    client_secret: str,
+    auth_realm: str,
     lora_url: AnyHttpUrl,
-    root_org_name: str,
-    municipality_code: int,
+    lora_client_id: str,
+    lora_client_secret: str,
+    lora_auth_realm: str,
+    config_file: TextIOWrapper,
 ) -> None:
-    client = LoRaModelClient(
-        base_url=lora_url,
-        # TODO: Uncomment when https://git.magenta.dk/rammearkitektur/os2mo/-/tree/feature/45561-lora-auth is merged  # noqa: E501
-        # session_factory=common_session_factory(token_settings=LoraTokenSettings()),
-    )
-    generate_uuid = uuid_generator(base=root_org_name)
-    async with client.context():
-        root_organisation_uuid = await ensure_root_organisation(
-            client=client,
-            name=root_org_name,
-            municipality_code=municipality_code,
-            generate_uuid=generate_uuid,
+    config = get_config(config_file)
+    async with get_clients(
+        auth_server=auth_server,
+        mo_url=mo_url,
+        client_id=client_id,
+        client_secret=client_secret,
+        auth_realm=auth_realm,
+        lora_url=lora_url,
+        lora_client_id=lora_client_id,
+        lora_client_secret=lora_client_secret,
+        lora_auth_realm=lora_auth_realm,
+    ) as clients:
+        # LoRa setup
+        root_organisation_uuid = await initialisers.ensure_root_organisation(
+            mo_graphql_session=clients.mo_graphql_session,
+            lora_model_client=clients.lora_model_client,
+            **config.root_organisation.dict(),
         )
-        await ensure_default_facets(
-            client=client,
+        facet_user_keys = config.facets.keys()
+        facets = await initialisers.ensure_facets(
+            mo_client=clients.mo_client,
+            lora_model_client=clients.lora_model_client,
             organisation_uuid=root_organisation_uuid,
-            generate_uuid=generate_uuid,
+            user_keys=facet_user_keys,
         )
-        await ensure_default_classes(
-            client=client,
+        facet_uuids = dict(zip(facet_user_keys, (f.uuid for f in facets)))
+
+        # MO setup
+        await initialisers.ensure_classes(
+            mo_client=clients.mo_client,
+            mo_model_client=clients.mo_model_client,
             organisation_uuid=root_organisation_uuid,
-            generate_uuid=generate_uuid,
+            facet_classes_config=config.facets,
+            facet_uuids=facet_uuids,
         )

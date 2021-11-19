@@ -1,7 +1,5 @@
-# --------------------------------------------------------------------------------------
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-# --------------------------------------------------------------------------------------
 from typing import Any
 from typing import cast
 
@@ -9,7 +7,7 @@ import click
 from pydantic import AnyHttpUrl
 from pydantic import parse_obj_as
 from pydantic import ValidationError
-from ra_utils.headers import TokenSettings
+from ra_utils.generate_uuid import uuid_generator
 
 
 def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
@@ -19,10 +17,4 @@ def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
         raise click.BadParameter(str(e))
 
 
-class LoraTokenSettings(TokenSettings):
-    """
-    RA Utils TokenSettings, but with defaults for LoRa.
-    """
-
-    client_secret: str
-    auth_realm: str = "lora"
+generate_uuid = uuid_generator(base="OS2MO")

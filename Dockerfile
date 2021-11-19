@@ -15,4 +15,6 @@ COPY pyproject.toml poetry.lock* ./
 RUN /opt/poetry/bin/poetry install --no-root --no-dev
 
 COPY . ./
+COPY config.default.yml /config/config.yml
+
 ENTRYPOINT ["python", "-m", "os2mo_init"]
