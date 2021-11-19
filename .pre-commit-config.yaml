@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/pycqa/flake8
-    rev: 3.9.2
+    rev: 4.0.1
     hooks:
       - id: flake8
 
   - repo: https://github.com/psf/black
-    rev: 21.9b0
+    rev: 21.11b1
     hooks:
       - id: black
 
@@ -27,6 +27,6 @@ repos:
       - id: reuse
 
   - repo: https://github.com/hadolint/hadolint
-    rev: 3b1de5a  # todo: pin to to >=v2.7.1 whenever that's released
+    rev: v2.8.0
     hooks:
       - id: hadolint-docker
