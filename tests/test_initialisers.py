@@ -6,6 +6,7 @@ from uuid import UUID
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from httpx import AsyncClient
+from respx import MockRouter
 
 from os2mo_init import initialisers
 from os2mo_init.config import ConfigClass
@@ -121,6 +122,42 @@ async def test_ensure_classes(
     # barsel created with UUID from generate_uuid()
     assert (
         actual_classes[1].uuid
-        == generate_uuid(f"facets.leave_type.classes.barsel")
+        == generate_uuid("facets.leave_type.classes.barsel")
         == UUID("8a9bfb06-af50-b867-6669-ff098bb74ce6")
     )
+
+
+@pytest.mark.asyncio
+async def test_ensure_it_systems(
+    async_client: AsyncClient,
+    root_org_uuid: UUID,
+    it_systems_mock: dict[str, dict[str, str]],
+    respx_mock: MockRouter,
+) -> None:
+    it_systems_config = {
+        "AD": "New AD Name",
+        "OpenDesk": "The Open Desk",
+    }
+
+    ad_uuid = it_systems_mock["AD"]["uuid"]
+    respx_mock.put(
+        f"{async_client.base_url}/organisation/itsystem/{ad_uuid}",
+        json__attributter__itsystemegenskaber__0__brugervendtnoegle="AD",
+        json__attributter__itsystemegenskaber__0__itsystemnavn="New AD Name",
+    )
+    open_desk_uuid = generate_uuid("it_systems.OpenDesk")
+    respx_mock.put(
+        f"{async_client.base_url}/organisation/itsystem/{open_desk_uuid}",
+        json__attributter__itsystemegenskaber__0__brugervendtnoegle="OpenDesk",
+        json__attributter__itsystemegenskaber__0__itsystemnavn="The Open Desk",
+    )
+
+    await initialisers.ensure_it_systems(
+        mo_client=async_client,
+        lora_client=async_client,
+        organisation_uuid=root_org_uuid,
+        it_systems_config=it_systems_config,
+    )
+
+    assert open_desk_uuid == UUID("d2ef5d9a-d5dc-a522-1df1-62cecf012c92")
+    respx_mock.assert_all_called()

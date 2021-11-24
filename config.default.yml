@@ -5,6 +5,7 @@ root_organisation:
   name: "root"
   user_key: "root"
   municipality_code: null
+
 facets:
   # Common classes derived from the following places:
   #  - os2mo-data-import-and-export/tools/default_mo_setup.py:ensure_default_classes
@@ -64,3 +65,7 @@ facets:
       title: "Manuelt primær ansættelse"
       scope: "5000"
   org_unit_hierarchy: {}
+
+it_systems: {}
+  # AD: "Active Directory"
+  # Omada: "Omada IT"

@@ -7,8 +7,8 @@ SPDX-License-Identifier: MPL-2.0
 
 
 ## Usage
-The primary usage of the tool is to initialise OS2mo's database with a root organisation, all required classes, and
-recommended facets.
+The primary usage of the tool is to initialise OS2mo's database with a root organisation, all required classes,
+recommended facets, and IT systems.
 ```text
 Usage: python -m os2mo_init [OPTIONS]
 

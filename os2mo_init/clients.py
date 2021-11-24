@@ -1,7 +1,10 @@
+# SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
+# SPDX-License-Identifier: MPL-2.0
 import asyncio
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
+from typing import AsyncIterator
 
 from gql.client import AsyncClientSession
 from httpx import AsyncClient
@@ -18,6 +21,7 @@ from raclients.modelclientbase import common_session_factory
 class Clients:
     mo_graphql_session: AsyncClientSession
     mo_client: AsyncClient
+    lora_client: AsyncClient
     mo_model_client: MoModelClient
     lora_model_client: LoRaModelClient
 
@@ -33,7 +37,7 @@ async def get_clients(
     lora_client_id: str,
     lora_client_secret: str,
     lora_auth_realm: str,
-):
+) -> AsyncIterator[Clients]:
     """
     Get GraphQL, HTTP, and Model Clients.
 
@@ -56,6 +60,12 @@ async def get_clients(
         auth_realm=auth_realm,
         auth_server=auth_server,
     )
+    lora_auth_settings = dict(
+        client_id=lora_client_id,
+        client_secret=lora_client_secret,
+        auth_realm=lora_auth_realm,
+        auth_server=auth_server,
+    )
 
     mo_graphql_client = GraphQLClient(
         url=f"{mo_url}/graphql",
@@ -66,6 +76,10 @@ async def get_clients(
         base_url=mo_url,
         **mo_auth_settings,
     )
+    lora_client = AuthenticatedAsyncHTTPXClient(
+        base_url=lora_url,
+        **lora_auth_settings,
+    )
 
     mo_model_client = MoModelClient(
         base_url=mo_url,
@@ -73,29 +87,26 @@ async def get_clients(
             token_settings=TokenSettings(**mo_auth_settings)
         ),
     )
-
     lora_model_client = LoRaModelClient(
         base_url=lora_url,
         session_factory=common_session_factory(
-            token_settings=TokenSettings(
-                client_id=lora_client_id,
-                client_secret=lora_client_secret,
-                auth_realm=lora_auth_realm,
-                auth_server=auth_server,
-            )
+            token_settings=TokenSettings(**lora_auth_settings)
         ),
     )
 
     async with AsyncExitStack() as stack:
-        mo_graphql_session, mo_client_session, *_ = await asyncio.gather(
+        contexts = await asyncio.gather(
             stack.enter_async_context(mo_graphql_client),
             stack.enter_async_context(mo_client),
+            stack.enter_async_context(lora_client),
             stack.enter_async_context(mo_model_client.context()),
             stack.enter_async_context(lora_model_client.context()),
         )
+        mo_graphql_session, mo_client_session, lora_client_session, *_ = contexts
         yield Clients(
             mo_graphql_session=mo_graphql_session,
             mo_client=mo_client_session,
+            lora_client=lora_client_session,
             mo_model_client=mo_model_client,
             lora_model_client=lora_model_client,
         )

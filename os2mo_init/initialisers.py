@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from collections.abc import Iterable
+from typing import cast
 from typing import Optional
 from uuid import UUID
 
@@ -44,7 +45,7 @@ async def ensure_root_organisation(
         municipality_code=municipality_code,
     )
     await lora_model_client.load_lora_objs([root_organisation])
-    return root_organisation.uuid
+    return cast(UUID, root_organisation.uuid)
 
 
 async def ensure_facets(
@@ -119,8 +120,64 @@ async def ensure_classes(
     return classes
 
 
-async def ensure_it_systems() -> None:
+async def ensure_it_systems(
+    mo_client: AsyncClient,
+    lora_client: AsyncClient,
+    organisation_uuid: UUID,
+    it_systems_config: dict[str, str],
+) -> dict[UUID, dict]:
     """
-    TODO: Migrate from os2mint-omada
+    Idempotently ensure the given IT Systems exist in LoRa.
+
+    Args:
+        mo_client: Authenticated MO client.
+        lora_client: Authenticated LoRa client.
+        organisation_uuid: Root organisation UUID the IT Systems are created under.
+        it_systems_config: Dictionary mapping IT System user keys into names.
+
+    Returns: Dictionary of (potentially created or updated) IT systems.
     """
-    raise NotImplemented()
+    # TODO: Implement using proper classes once #47122 is done.
+    existing_it_systems = await mo.get_it_systems(
+        client=mo_client,
+        organisation_uuid=organisation_uuid,
+    )
+
+    def get_it_system(user_key: str, name: str) -> tuple[UUID, dict]:
+        it_system_uuid = existing_it_systems.get(
+            user_key, generate_uuid(f"it_systems.{user_key}")
+        )
+        validity = {
+            "from": "1930-01-01",  # the beginning of the universe according to LoRa
+            "to": "infinity",
+        }
+        it_system = {
+            "attributter": {
+                "itsystemegenskaber": [
+                    {
+                        "brugervendtnoegle": user_key,
+                        "integrationsdata": "",
+                        "itsystemnavn": name,
+                        "virkning": validity,
+                    }
+                ]
+            },
+            "tilstande": {
+                "itsystemgyldighed": [{"gyldighed": "Aktiv", "virkning": validity}]
+            },
+            "relationer": {
+                "tilhoerer": [{"uuid": str(organisation_uuid), "virkning": validity}]
+            },
+        }
+        return it_system_uuid, it_system
+
+    it_systems = dict(
+        get_it_system(user_key=user_key, name=name)
+        for user_key, name in it_systems_config.items()
+    )
+    for uuid, it_system in it_systems.items():
+        await lora_client.put(
+            url=f"/organisation/itsystem/{uuid}",
+            json=it_system,
+        )
+    return it_systems

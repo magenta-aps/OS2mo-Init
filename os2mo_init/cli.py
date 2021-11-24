@@ -128,6 +128,7 @@ async def run(
             lora_model_client=clients.lora_model_client,
             **config.root_organisation.dict(),
         )
+
         facet_user_keys = config.facets.keys()
         facets = await initialisers.ensure_facets(
             mo_client=clients.mo_client,
@@ -136,6 +137,13 @@ async def run(
             user_keys=facet_user_keys,
         )
         facet_uuids = dict(zip(facet_user_keys, (f.uuid for f in facets)))
+
+        await initialisers.ensure_it_systems(
+            mo_client=clients.mo_client,
+            lora_client=clients.lora_client,
+            organisation_uuid=root_organisation_uuid,
+            it_systems_config=config.it_systems,
+        )
 
         # MO setup
         await initialisers.ensure_classes(

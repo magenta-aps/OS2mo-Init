@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import asyncio
 from typing import Any
+from typing import cast
 from typing import Optional
 from uuid import UUID
 
@@ -38,9 +39,7 @@ async def get_root_org(graphql_session: AsyncClientSession) -> Optional[UUID]:
         raise e
 
 
-async def get_facets(
-    client: AsyncClient, organisation_uuid: UUID
-) -> dict[str, UUID]:
+async def get_facets(client: AsyncClient, organisation_uuid: UUID) -> dict[str, UUID]:
     """
     Get existing facets.
 
@@ -68,7 +67,7 @@ async def get_classes_for_facet(
     Returns: List of class dicts for the given facet.
     """
     r = await client.get(f"/service/f/{facet_uuid}/")
-    return r.json()["data"]["items"]
+    return cast(list[dict[str, Any]], r.json()["data"]["items"])
 
 
 async def get_classes(
@@ -96,3 +95,20 @@ async def get_classes(
         }
         for facet_user_key, facet_classes in facets_and_classes
     }
+
+
+async def get_it_systems(
+    client: AsyncClient, organisation_uuid: UUID
+) -> dict[str, UUID]:
+    """
+    Get existing IT Systems.
+
+    Args:
+        client: Authenticated MO client.
+        organisation_uuid: Root organisation UUID of the IT Systems.
+
+    Returns: Dictionary mapping IT System user keys into their UUIDs.
+    """
+    r = await client.get(f"/service/o/{organisation_uuid}/it/")
+    it_systems = r.json()
+    return {i["user_key"]: UUID(i["uuid"]) for i in it_systems}

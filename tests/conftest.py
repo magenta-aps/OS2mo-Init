@@ -1,13 +1,10 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-from collections import defaultdict
 from uuid import UUID
 
 import pytest
 from httpx import AsyncClient
 from respx import MockRouter
-
-from os2mo_init.util import generate_uuid
 
 
 @pytest.fixture
@@ -87,3 +84,32 @@ def classes_mock(
             }
         )
     return classes
+
+
+@pytest.fixture
+def it_systems() -> dict[str, dict[str, str]]:
+    return {
+        "SAP": {
+            "uuid": "b985a0d2-1b68-4f1e-ad12-ff7b4982f41d",
+            "user_key": "SAP",
+            "name": "The Sap",
+        },
+        "AD": {
+            "uuid": "cf0d2b85-df02-41de-98c8-2130f11712ec",
+            "user_key": "AD",
+            "name": "Active Directory",
+        },
+    }
+
+
+@pytest.fixture
+def it_systems_mock(
+    async_client: AsyncClient,
+    root_org_uuid: UUID,
+    it_systems: dict[str, dict[str, str]],
+    respx_mock: MockRouter,
+) -> dict[str, dict[str, str]]:
+    respx_mock.get(f"{async_client.base_url}/service/o/{root_org_uuid}/it/").respond(
+        json=list(it_systems.values())
+    )
+    return it_systems

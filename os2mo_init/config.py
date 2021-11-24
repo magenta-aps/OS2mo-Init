@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 from io import TextIOWrapper
 from typing import ItemsView
-from typing import Iterable
 from typing import Optional
 
 import yaml
@@ -30,6 +29,7 @@ class ConfigFacet(BaseModel):
 class Config(BaseModel):
     root_organisation: ConfigRootOrganisation
     facets: dict[str, ConfigFacet]
+    it_systems: dict[str, str]
 
 
 def get_config(config_file: TextIOWrapper) -> Config:

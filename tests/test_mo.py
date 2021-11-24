@@ -7,7 +7,6 @@ import pytest
 from gql.transport.exceptions import TransportQueryError
 from graphql import GraphQLError
 from httpx import AsyncClient
-from ramodels.mo import FacetClass
 
 from os2mo_init import mo
 
@@ -78,4 +77,18 @@ async def test_get_classes(
         }
         for facet_user_key, facet_classes in classes_mock.items()
     }
+    assert actual == expected
+
+
+@pytest.mark.asyncio
+async def test_get_it_systems(
+    async_client: AsyncClient,
+    root_org_uuid: UUID,
+    it_systems_mock: dict[str, dict[str, str]],
+) -> None:
+    actual = await mo.get_it_systems(
+        client=async_client,
+        organisation_uuid=root_org_uuid,
+    )
+    expected = {user_key: UUID(it["uuid"]) for user_key, it in it_systems_mock.items()}
     assert actual == expected
