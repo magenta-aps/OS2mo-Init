@@ -6,6 +6,12 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.1.0 - 2021-11-29
+------------------
+
+[#46885] Support configurable facets and classes
+[#47121] Add support for IT Systems
+
 ## v0.0.4 - 2021-09-20
 - Add support for LoRa authentication.
 
