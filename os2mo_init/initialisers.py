@@ -1,81 +1,183 @@
-# --------------------------------------------------------------------------------------
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-# --------------------------------------------------------------------------------------
-from collections import Callable
-from typing import List
+from collections.abc import Iterable
+from typing import cast
 from typing import Optional
 from uuid import UUID
 
-from more_itertools import one
-from ra_utils.generate_uuid import uuid_generator
+from gql.client import AsyncClientSession
+from httpx import AsyncClient
 from raclients.lora import ModelClient as LoRaModelClient
+from raclients.mo import ModelClient as MOModelClient
 from ramodels.lora import Facet
-from ramodels.lora import Klasse
 from ramodels.lora import Organisation
+from ramodels.mo import FacetClass
 
-from . import defaults
+from os2mo_init import mo
+from os2mo_init.config import ConfigFacet
+from os2mo_init.util import generate_uuid
 
 
 async def ensure_root_organisation(
-    client: LoRaModelClient,
+    mo_graphql_session: AsyncClientSession,
+    lora_model_client: LoRaModelClient,
     name: str,
+    user_key: str,
     municipality_code: Optional[int] = None,
-    generate_uuid: Callable[[str], UUID] = None,
 ) -> UUID:
-    if generate_uuid is None:
-        generate_uuid = uuid_generator(base=__package__)
+    """
+    Idempotently ensure a single root organisation exists with the given parameters.
 
-    response = await client.load_lora_objs(
-        [
-            Organisation.from_simplified_fields(
-                uuid=generate_uuid(""),
-                name=name,
-                user_key=name,
-                municipality_code=municipality_code,
-            )
-        ]
+    Args:
+        mo_graphql_session: MO GraphQL client session.
+        lora_model_client: LoRa model client.
+        name: Root organisation name.
+        user_key: Root organisation user key.
+        municipality_code: Root organisation municipality code.
+
+    Returns: UUID of the (potentially created or updated) root organisation.
+    """
+    existing_uuid = await mo.get_root_org(mo_graphql_session)
+    root_organisation = Organisation.from_simplified_fields(
+        uuid=existing_uuid or generate_uuid("organisations.__root__"),
+        name=name,
+        user_key=user_key,
+        municipality_code=municipality_code,
     )
-    return UUID(one(response)["uuid"])
+    await lora_model_client.load_lora_objs([root_organisation])
+    return cast(UUID, root_organisation.uuid)
 
 
-async def ensure_default_facets(
-    client: LoRaModelClient,
+async def ensure_facets(
+    mo_client: AsyncClient,
+    lora_model_client: LoRaModelClient,
     organisation_uuid: UUID,
-    generate_uuid: Callable[[str], UUID] = None,
-) -> List[UUID]:
-    if generate_uuid is None:
-        generate_uuid = uuid_generator(base=__package__)
+    user_keys: Iterable[str],
+) -> list[Facet]:
+    """
+    Idempotently ensure the given facets exist.
 
-    response = await client.load_lora_objs(
+    Args:
+        mo_client: Authenticated MO client.
+        lora_model_client: LoRa model client.
+        organisation_uuid: Root organisation UUID the facets are created under.
+        user_keys: Facet user keys to ensure exist.
+
+    Returns: List of (potentially created or updated) facet objects.
+    """
+    existing_facets = await mo.get_facets(
+        client=mo_client,
+        organisation_uuid=organisation_uuid,
+    )
+    facets = [
         Facet.from_simplified_fields(
-            uuid=generate_uuid(user_key),
+            uuid=existing_facets.get(user_key, generate_uuid(f"facets.{user_key}")),
             user_key=user_key,
             organisation_uuid=organisation_uuid,
         )
-        for user_key in defaults.facets
-    )
-    return [UUID(r["uuid"]) for r in response]
+        for user_key in user_keys
+    ]
+    await lora_model_client.load_lora_objs(facets)
+    return facets
 
 
-async def ensure_default_classes(
-    client: LoRaModelClient,
+async def ensure_classes(
+    mo_client: AsyncClient,
+    mo_model_client: MOModelClient,
     organisation_uuid: UUID,
-    generate_uuid: Callable[[str], UUID] = None,
-) -> List[UUID]:
-    if generate_uuid is None:
-        generate_uuid = uuid_generator(base=__package__)
+    facet_classes_config: dict[str, ConfigFacet],
+    facet_uuids: dict[str, UUID],
+) -> list[FacetClass]:
+    """
+    Idempotently ensure the given classes exist.
 
-    response = await client.load_lora_objs(
-        Klasse.from_simplified_fields(
-            facet_uuid=generate_uuid(facet_user_key),
-            uuid=generate_uuid(user_key),
-            user_key=user_key,
-            organisation_uuid=organisation_uuid,
-            title=fields["title"],
-            scope=fields["scope"],
+    Args:
+        mo_client: Authenticated MO client.
+        mo_model_client: MO model client.
+        organisation_uuid: Root organisation UUID the classes are created under.
+        facet_classes_config: Dictionary mapping facet user keys into ConfigFacets.
+        facet_uuids: Dictionary mapping facet user keys into UUIDs.
+
+    Returns: List of (potentially created or updated) facet objects.
+    """
+    existing_classes = await mo.get_classes(client=mo_client, facets=facet_uuids)
+    classes = [
+        FacetClass(
+            uuid=existing_classes[facet_user_key].get(
+                class_user_key,
+                generate_uuid(f"facets.{facet_user_key}.classes.{class_user_key}"),
+            ),
+            facet_uuid=facet_uuids[facet_user_key],
+            name=klass.title,
+            user_key=class_user_key,
+            scope=klass.scope,
+            org_uuid=organisation_uuid,
         )
-        for facet_user_key, facet_classes in defaults.classes.items()
-        for user_key, fields in facet_classes.items()
+        for facet_user_key, facet in facet_classes_config.items()
+        for class_user_key, klass in facet.items()
+    ]
+    await mo_model_client.load_mo_objs(classes)
+    return classes
+
+
+async def ensure_it_systems(
+    mo_client: AsyncClient,
+    lora_client: AsyncClient,
+    organisation_uuid: UUID,
+    it_systems_config: dict[str, str],
+) -> dict[UUID, dict]:
+    """
+    Idempotently ensure the given IT Systems exist in LoRa.
+
+    Args:
+        mo_client: Authenticated MO client.
+        lora_client: Authenticated LoRa client.
+        organisation_uuid: Root organisation UUID the IT Systems are created under.
+        it_systems_config: Dictionary mapping IT System user keys into names.
+
+    Returns: Dictionary of (potentially created or updated) IT systems.
+    """
+    # TODO: Implement using proper classes once #47122 is done.
+    existing_it_systems = await mo.get_it_systems(
+        client=mo_client,
+        organisation_uuid=organisation_uuid,
     )
-    return [UUID(r["uuid"]) for r in response]
+
+    def get_it_system(user_key: str, name: str) -> tuple[UUID, dict]:
+        it_system_uuid = existing_it_systems.get(
+            user_key, generate_uuid(f"it_systems.{user_key}")
+        )
+        validity = {
+            "from": "1930-01-01",  # the beginning of the universe according to LoRa
+            "to": "infinity",
+        }
+        it_system = {
+            "attributter": {
+                "itsystemegenskaber": [
+                    {
+                        "brugervendtnoegle": user_key,
+                        "integrationsdata": "",
+                        "itsystemnavn": name,
+                        "virkning": validity,
+                    }
+                ]
+            },
+            "tilstande": {
+                "itsystemgyldighed": [{"gyldighed": "Aktiv", "virkning": validity}]
+            },
+            "relationer": {
+                "tilhoerer": [{"uuid": str(organisation_uuid), "virkning": validity}]
+            },
+        }
+        return it_system_uuid, it_system
+
+    it_systems = dict(
+        get_it_system(user_key=user_key, name=name)
+        for user_key, name in it_systems_config.items()
+    )
+    for uuid, it_system in it_systems.items():
+        await lora_client.put(
+            url=f"/organisation/itsystem/{uuid}",
+            json=it_system,
+        )
+    return it_systems

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2019-2021 Magenta ApS
+# SPDX-FileCopyrightText: 2021 Magenta ApS
 # SPDX-License-Identifier: MPL-2.0
 
 # For `docker push` to work, the following environment variables have to set in
@@ -7,40 +7,32 @@
 # RELEASE_REGISTRY_PASSWORD
 
 variables:
-  RELEASE_REGISTRY: docker.io
   RELEASE_REGISTRY_IMAGE: index.docker.io/magentaaps/os2mo-init
-
   IMAGE_SHA: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}
-
-  IMAGE_DEV: ${RELEASE_REGISTRY_IMAGE}:dev
-  IMAGE_RC: ${RELEASE_REGISTRY_IMAGE}:rc
-  IMAGE_VERSION: ${RELEASE_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
   IMAGE_LATEST: ${RELEASE_REGISTRY_IMAGE}:latest
+  IMAGE_VERSION: ${RELEASE_REGISTRY_IMAGE}
 
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
 
-cache:
-  key: "${CI_JOB_NAME}"
-  paths:
-    - .venv/
-    - .cache/pip
-    - .cache/pre-commit
 
 stages:
   - lint
   - test
   - build
+  - prepare-release
   - release
 
 # ---------------------------------------------------------------------------
 # Templates
 # ---------------------------------------------------------------------------
 include:
+  - project: labs/salt-automation
+    file: gitlab-ci-templates/common/autopub.v1.yml
+  - project: labs/salt-automation
+    file: gitlab-ci-templates/common/docker-release.v1.yml
   - project: rammearkitektur/gitlab-ci-templates
     file: templates/poetry-precommit.yml
-  - project: rammearkitektur/gitlab-ci-templates
-    file: templates/lint-docker.yml
 
 
 # ---------------------------------------------------------------------------
@@ -61,13 +53,13 @@ Lint Python:
   stage: test
   needs: []
 
-Test on Python 3.8:
-  <<: *test
-  image: python:3.8
-
 Test on Python 3.9:
   <<: *test
   image: python:3.9
+
+Test on Python 3.10:
+  <<: *test
+  image: python:3.10
 
 
 # ---------------------------------------------------------------------------
@@ -86,73 +78,3 @@ Build:
       --context=$CI_PROJECT_DIR
       --dockerfile=$CI_PROJECT_DIR/Dockerfile
       --destination=$IMAGE_SHA
-
-
-# ---------------------------------------------------------------------------
-# Release
-# ---------------------------------------------------------------------------
-.release-template: &release
-  stage: release
-  needs:
-    - Test on Python 3.8
-    - Test on Python 3.9
-    - Build
-
-.release-python-template: &release-python
-  extends: .install-deps
-  <<: *release
-  image: python:3.9
-
-.release-docker-template: &release-docker
-  <<: *release
-  image: alpine
-  before_script:
-    - apk add skopeo
-
-# PyPI
-Release version to PyPI:
-  <<: *release-python
-  script: poetry publish --build -u OS2mo -p $PYPI_PWD
-  rules:
-    # Matches <version core> from SemVer 2.0.0 BNF grammar. Ex. 2.3.4, but not 2.3.4-rc
-    - if: $CI_COMMIT_TAG =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
-
-# Docker
-Release master to Docker registry:
-  <<: *release-docker
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "master"
-  script:
-    - skopeo copy
-      --src-creds=${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds=${RELEASE_REGISTRY_USER}:${RELEASE_REGISTRY_PASSWORD}
-      "docker://${IMAGE_SHA}"
-      "docker://${IMAGE_DEV}"
-
-Release rc to Docker registry:
-  <<: *release-docker
-  rules:
-    - if: $CI_COMMIT_REF_NAME =~ /^release\/.+$/
-  script:
-    - skopeo copy
-      --src-creds=${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds=${RELEASE_REGISTRY_USER}:${RELEASE_REGISTRY_PASSWORD}
-      "docker://${IMAGE_SHA}"
-      "docker://${IMAGE_RC}"
-
-Release version to Docker registry:
-  <<: *release-docker
-  rules:
-      # Matches <version core> from SemVer 2.0.0 BNF grammar. Ex. 2.3.4, but not 2.3.4-rc
-      - if: $CI_COMMIT_TAG =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
-  script:
-    - skopeo copy
-      --src-creds=${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds=${RELEASE_REGISTRY_USER}:${RELEASE_REGISTRY_PASSWORD}
-      "docker://${IMAGE_SHA}"
-      "docker://${IMAGE_VERSION}"
-    - skopeo copy
-      --src-creds=${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds=${RELEASE_REGISTRY_USER}:${RELEASE_REGISTRY_PASSWORD}
-      "docker://${IMAGE_SHA}"
-      "docker://${IMAGE_LATEST}"
