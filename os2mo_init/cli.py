@@ -7,6 +7,7 @@ from pydantic import AnyHttpUrl
 from ra_utils.async_to_sync import async_to_sync
 
 from os2mo_init import initialisers
+from os2mo_init import mo
 from os2mo_init.clients import get_clients
 from os2mo_init.config import get_config
 from os2mo_init.util import validate_url
@@ -122,34 +123,43 @@ async def run(
         lora_client_secret=lora_client_secret,
         lora_auth_realm=lora_auth_realm,
     ) as clients:
-        # LoRa setup
-        root_organisation_uuid = await initialisers.ensure_root_organisation(
-            mo_graphql_session=clients.mo_graphql_session,
-            lora_model_client=clients.lora_model_client,
-            **config.root_organisation.dict(),
-        )
+        # Root Organisation
+        root_organisation_uuid = await mo.get_root_org(clients.mo_graphql_session)
+        if config.root_organisation is not None:
+            root_organisation_uuid = await initialisers.ensure_root_organisation(
+                lora_model_client=clients.lora_model_client,
+                existing_uuid=root_organisation_uuid,
+                **config.root_organisation.dict(),
+            )
+        if root_organisation_uuid is None:
+            raise ValueError(
+                "No root organisation configuration supplied, but none exist in MO."
+                "Unable to continue."
+            )
 
-        facet_user_keys = config.facets.keys()
-        facets = await initialisers.ensure_facets(
-            mo_client=clients.mo_client,
-            lora_model_client=clients.lora_model_client,
-            organisation_uuid=root_organisation_uuid,
-            user_keys=facet_user_keys,
-        )
-        facet_uuids = dict(zip(facet_user_keys, (f.uuid for f in facets)))
+        # Facets and Classes
+        if config.facets is not None:
+            facet_user_keys = config.facets.keys()
+            facets = await initialisers.ensure_facets(
+                mo_client=clients.mo_client,
+                lora_model_client=clients.lora_model_client,
+                organisation_uuid=root_organisation_uuid,
+                user_keys=facet_user_keys,
+            )
+            facet_uuids = dict(zip(facet_user_keys, (f.uuid for f in facets)))
+            await initialisers.ensure_classes(
+                mo_client=clients.mo_client,
+                mo_model_client=clients.mo_model_client,
+                organisation_uuid=root_organisation_uuid,
+                facet_classes_config=config.facets,
+                facet_uuids=facet_uuids,
+            )
 
-        await initialisers.ensure_it_systems(
-            mo_client=clients.mo_client,
-            lora_client=clients.lora_client,
-            organisation_uuid=root_organisation_uuid,
-            it_systems_config=config.it_systems,
-        )
-
-        # MO setup
-        await initialisers.ensure_classes(
-            mo_client=clients.mo_client,
-            mo_model_client=clients.mo_model_client,
-            organisation_uuid=root_organisation_uuid,
-            facet_classes_config=config.facets,
-            facet_uuids=facet_uuids,
-        )
+        # IT Systems
+        if config.it_systems is not None:
+            await initialisers.ensure_it_systems(
+                mo_client=clients.mo_client,
+                lora_client=clients.lora_client,
+                organisation_uuid=root_organisation_uuid,
+                it_systems_config=config.it_systems,
+            )

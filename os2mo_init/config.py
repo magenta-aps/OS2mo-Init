@@ -27,9 +27,9 @@ class ConfigFacet(BaseModel):
 
 
 class Config(BaseModel):
-    root_organisation: ConfigRootOrganisation
-    facets: dict[str, ConfigFacet]
-    it_systems: dict[str, str]
+    root_organisation: Optional[ConfigRootOrganisation]
+    facets: Optional[dict[str, ConfigFacet]]
+    it_systems: Optional[dict[str, str]]
 
 
 def get_config(config_file: TextIOWrapper) -> Config:
