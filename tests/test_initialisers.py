@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 from uuid import UUID
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from httpx import AsyncClient
 from respx import MockRouter
 
@@ -15,15 +14,14 @@ from os2mo_init.util import generate_uuid
 
 
 @pytest.mark.asyncio
-async def test_ensure_root_organisation_no_existing(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr("os2mo_init.mo.get_root_org", AsyncMock(return_value=None))
+async def test_ensure_root_organisation_no_existing() -> None:
     lora_model_client_mock = AsyncMock()
 
     await initialisers.ensure_root_organisation(
-        mo_graphql_session=AsyncMock(),
         lora_model_client=lora_model_client_mock,
         name="my name",
         user_key="my user key",
+        existing_uuid=None,
     )
 
     lora_model_client_mock.load_lora_objs.assert_awaited_once()
@@ -36,19 +34,14 @@ async def test_ensure_root_organisation_no_existing(monkeypatch: MonkeyPatch) ->
 
 
 @pytest.mark.asyncio
-async def test_ensure_root_organisation_exising(
-    monkeypatch: MonkeyPatch, root_org_uuid: UUID
-) -> None:
-    monkeypatch.setattr(
-        "os2mo_init.mo.get_root_org", AsyncMock(return_value=root_org_uuid)
-    )
+async def test_ensure_root_organisation_exising(root_org_uuid: UUID) -> None:
     lora_model_client_mock = AsyncMock()
 
     await initialisers.ensure_root_organisation(
-        mo_graphql_session=AsyncMock(),
         lora_model_client=lora_model_client_mock,
         name="my name",
         user_key="my user key",
+        existing_uuid=root_org_uuid,
     )
 
     lora_model_client_mock.load_lora_objs.assert_awaited_once()

@@ -5,7 +5,6 @@ from typing import cast
 from typing import Optional
 from uuid import UUID
 
-from gql.client import AsyncClientSession
 from httpx import AsyncClient
 from raclients.lora import ModelClient as LoRaModelClient
 from raclients.mo import ModelClient as MOModelClient
@@ -19,25 +18,24 @@ from os2mo_init.util import generate_uuid
 
 
 async def ensure_root_organisation(
-    mo_graphql_session: AsyncClientSession,
     lora_model_client: LoRaModelClient,
     name: str,
     user_key: str,
     municipality_code: Optional[int] = None,
+    existing_uuid: Optional[UUID] = None,
 ) -> UUID:
     """
     Idempotently ensure a single root organisation exists with the given parameters.
 
     Args:
-        mo_graphql_session: MO GraphQL client session.
         lora_model_client: LoRa model client.
         name: Root organisation name.
         user_key: Root organisation user key.
         municipality_code: Root organisation municipality code.
+        existing_uuid: Optional UUID of the potentially pre-existing root organisation.
 
     Returns: UUID of the (potentially created or updated) root organisation.
     """
-    existing_uuid = await mo.get_root_org(mo_graphql_session)
     root_organisation = Organisation.from_simplified_fields(
         uuid=existing_uuid or generate_uuid("organisations.__root__"),
         name=name,

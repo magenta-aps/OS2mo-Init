@@ -66,6 +66,6 @@ facets:
       scope: "5000"
   org_unit_hierarchy: {}
 
-it_systems: {}
-  # AD: "Active Directory"
-  # Omada: "Omada IT"
+#it_systems:
+#  AD: "Active Directory"
+#  Omada: "Omada IT"

@@ -72,11 +72,10 @@ metadata:
   name: os2mo-init-config
 data:
   config: |
+    root_organisation:
+      ...
     facets:
-      org_unit_address_type:
-        PhoneUnit:
-          title: "CVR"
-          scope: "CVR"
+      ...
 ```
 Then connect it to the deployment or pod:
 ```yaml
