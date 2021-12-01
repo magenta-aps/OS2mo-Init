@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.1.1 - 2021-12-01
+------------------
+
+[#42613] Make all config options optional
+
 0.1.0 - 2021-11-29
 ------------------
 
