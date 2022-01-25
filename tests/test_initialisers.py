@@ -24,8 +24,8 @@ async def test_ensure_root_organisation_no_existing() -> None:
         existing_uuid=None,
     )
 
-    lora_model_client_mock.load_lora_objs.assert_awaited_once()
-    actual_org = lora_model_client_mock.load_lora_objs.await_args.args[0][0]
+    lora_model_client_mock.upload.assert_awaited_once()
+    actual_org = lora_model_client_mock.upload.await_args.args[0][0]
     assert (
         actual_org.uuid
         == generate_uuid("organisations.__root__")
@@ -44,8 +44,8 @@ async def test_ensure_root_organisation_exising(root_org_uuid: UUID) -> None:
         existing_uuid=root_org_uuid,
     )
 
-    lora_model_client_mock.load_lora_objs.assert_awaited_once()
-    actual_org = lora_model_client_mock.load_lora_objs.await_args.args[0][0]
+    lora_model_client_mock.upload.assert_awaited_once()
+    actual_org = lora_model_client_mock.upload.await_args.args[0][0]
     assert actual_org.uuid == root_org_uuid
 
 
@@ -64,8 +64,8 @@ async def test_ensure_facets(
         user_keys=user_keys,
     )
 
-    lora_model_client_mock.load_lora_objs.assert_awaited_once()
-    actual_facets = lora_model_client_mock.load_lora_objs.await_args.args[0]
+    lora_model_client_mock.upload.assert_awaited_once()
+    actual_facets = lora_model_client_mock.upload.await_args.args[0]
     # leave_type updated with original UUID
     assert actual_facets[0].uuid == facets_mock["leave_type"]
     # my_new_facet created with UUID from generate_uuid("facets.my_new_facet")
@@ -107,8 +107,8 @@ async def test_ensure_classes(
         facet_uuids=facets,
     )
 
-    mo_model_client_mock.load_mo_objs.assert_awaited_once()
-    actual_classes = mo_model_client_mock.load_mo_objs.await_args.args[0]
+    mo_model_client_mock.upload.assert_awaited_once()
+    actual_classes = mo_model_client_mock.upload.await_args.args[0]
     # Orlov updated with original UUID
     assert actual_classes[0].uuid == UUID(classes_mock["leave_type"]["Orlov"]["uuid"])
     assert actual_classes[0].name == "New Orlov Name"
