@@ -15,6 +15,9 @@ from raclients.graph.client import GraphQLClient
 from raclients.lora import ModelClient as LoRaModelClient
 from raclients.mo import ModelClient as MoModelClient
 from raclients.modelclientbase import common_session_factory
+from structlog import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -54,6 +57,9 @@ async def get_clients(
 
     Yields: Clients object containing opened clients.
     """
+
+    logger.debug("Getting GraphQL, HTTP and Model clients...")
+
     mo_auth_settings = dict(
         client_id=client_id,
         client_secret=client_secret,

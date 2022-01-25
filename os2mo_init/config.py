@@ -5,7 +5,7 @@ from typing import ItemsView
 from typing import Optional
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseSettings
 
 
 class ConfigRootOrganisation(BaseModel):
@@ -36,3 +36,10 @@ def get_config(config_file: TextIOWrapper) -> Config:
     config_yaml = yaml.safe_load(config_file)
     config = Config.parse_obj(config_yaml)
     return config
+
+
+class Settings(BaseSettings):
+    log_level: str = "INFO"
+
+
+settings = Settings()

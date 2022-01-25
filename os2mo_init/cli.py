@@ -4,6 +4,8 @@ from io import TextIOWrapper
 
 import click
 from pydantic import AnyHttpUrl
+from structlog import get_logger
+
 from ra_utils.async_to_sync import async_to_sync
 
 from os2mo_init import initialisers
@@ -11,6 +13,9 @@ from os2mo_init import mo
 from os2mo_init.clients import get_clients
 from os2mo_init.config import get_config
 from os2mo_init.util import validate_url
+
+
+logger = get_logger(__name__)
 
 
 @click.command(
@@ -111,6 +116,9 @@ async def run(
     lora_auth_realm: str,
     config_file: TextIOWrapper,
 ) -> None:
+
+    logger.debug("Application startup")
+
     config = get_config(config_file)
     async with get_clients(
         auth_server=auth_server,
@@ -123,8 +131,14 @@ async def run(
         lora_client_secret=lora_client_secret,
         lora_auth_realm=lora_auth_realm,
     ) as clients:
+
         # Root Organisation
+
+        logger.debug("Handling root organisation")
+
         root_organisation_uuid = await mo.get_root_org(clients.mo_graphql_session)
+        logger.debug("Existing root organisation", uuid=root_organisation_uuid)
+
         if config.root_organisation is not None:
             root_organisation_uuid = await initialisers.ensure_root_organisation(
                 lora_model_client=clients.lora_model_client,
