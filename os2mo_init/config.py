@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
+import logging
 from io import TextIOWrapper
 from typing import ItemsView
 from typing import Optional
 
 import yaml
+import structlog
 from pydantic import BaseModel
 
 
@@ -36,3 +38,10 @@ def get_config(config_file: TextIOWrapper) -> Config:
     config_yaml = yaml.safe_load(config_file)
     config = Config.parse_obj(config_yaml)
     return config
+
+
+def set_log_level(log_level_name: str):
+    log_level_value = logging.getLevelName(log_level_name)
+    structlog.configure(
+        wrapper_class=structlog.make_filtering_bound_logger(log_level_value)
+    )

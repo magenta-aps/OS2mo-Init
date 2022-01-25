@@ -10,6 +10,9 @@ from gql import gql
 from gql.client import AsyncClientSession
 from gql.transport.exceptions import TransportQueryError
 from httpx import AsyncClient
+from structlog import get_logger
+
+logger = get_logger(__name__)
 
 
 async def get_root_org(graphql_session: AsyncClientSession) -> Optional[UUID]:
@@ -31,9 +34,16 @@ async def get_root_org(graphql_session: AsyncClientSession) -> Optional[UUID]:
         """
     )
     try:
+        logger.debug("Getting root org UUID from MO...")
+
         result = await graphql_session.execute(query)
-        return UUID(result["org"]["uuid"])
+        root_org_uuid = result["org"]["uuid"]
+
+        logger.debug("Root org uuid", uuid=root_org_uuid)
+
+        return UUID(root_org_uuid)
     except TransportQueryError as e:
+        logger.debug("Error getting root org UUID from MO", exc=e)
         if (
             e.errors is not None
             and e.errors[0].message == "ErrorCodes.E_ORG_UNCONFIGURED"
