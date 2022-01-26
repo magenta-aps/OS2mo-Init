@@ -4,9 +4,8 @@ from io import TextIOWrapper
 
 import click
 from pydantic import AnyHttpUrl
-from structlog import get_logger
-
 from ra_utils.async_to_sync import async_to_sync
+from structlog import get_logger
 
 from os2mo_init import initialisers
 from os2mo_init import mo
@@ -109,10 +108,11 @@ logger = get_logger(__name__)
     help="Set the application log level",
     type=click.Choice(
         ["CRITICAL", "FATAL", "ERROR", "WARN", "WARNING", "INFO", "DEBUG", "NOTSET"],
-        case_sensitive=False),
+        case_sensitive=False,
+    ),
     default="INFO",
     envvar="LOG_LEVEL",
-    show_envvar=True
+    show_envvar=True,
 )
 @async_to_sync
 async def run(
@@ -126,7 +126,7 @@ async def run(
     lora_client_secret: str,
     lora_auth_realm: str,
     config_file: TextIOWrapper,
-    log_level: str
+    log_level: str,
 ) -> None:
 
     set_log_level(log_level)
