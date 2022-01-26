@@ -9,12 +9,10 @@ from typing import AsyncIterator
 from gql.client import AsyncClientSession
 from httpx import AsyncClient
 from pydantic import AnyHttpUrl
-from ra_utils.headers import TokenSettings
 from raclients.auth import AuthenticatedAsyncHTTPXClient
 from raclients.graph.client import GraphQLClient
-from raclients.lora import ModelClient as LoRaModelClient
-from raclients.mo import ModelClient as MoModelClient
-from raclients.modelclientbase import common_session_factory
+from raclients.modelclient.lora import ModelClient as LoRaModelClient
+from raclients.modelclient.mo import ModelClient as MoModelClient
 
 
 @dataclass
@@ -83,15 +81,11 @@ async def get_clients(
 
     mo_model_client = MoModelClient(
         base_url=mo_url,
-        session_factory=common_session_factory(
-            token_settings=TokenSettings(**mo_auth_settings)
-        ),
+        **mo_auth_settings,
     )
     lora_model_client = LoRaModelClient(
         base_url=lora_url,
-        session_factory=common_session_factory(
-            token_settings=TokenSettings(**lora_auth_settings)
-        ),
+        **lora_auth_settings,
     )
 
     async with AsyncExitStack() as stack:
@@ -99,8 +93,8 @@ async def get_clients(
             stack.enter_async_context(mo_graphql_client),
             stack.enter_async_context(mo_client),
             stack.enter_async_context(lora_client),
-            stack.enter_async_context(mo_model_client.context()),
-            stack.enter_async_context(lora_model_client.context()),
+            stack.enter_async_context(mo_model_client),
+            stack.enter_async_context(lora_model_client),
         )
         mo_graphql_session, mo_client_session, lora_client_session, *_ = contexts
         yield Clients(

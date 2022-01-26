@@ -34,7 +34,10 @@ async def get_root_org(graphql_session: AsyncClientSession) -> Optional[UUID]:
         result = await graphql_session.execute(query)
         return UUID(result["org"]["uuid"])
     except TransportQueryError as e:
-        if e.errors[0].message == "ErrorCodes.E_ORG_UNCONFIGURED":
+        if (
+            e.errors is not None
+            and e.errors[0].message == "ErrorCodes.E_ORG_UNCONFIGURED"
+        ):
             return None
         raise e
 

@@ -6,8 +6,8 @@ from typing import Optional
 from uuid import UUID
 
 from httpx import AsyncClient
-from raclients.lora import ModelClient as LoRaModelClient
-from raclients.mo import ModelClient as MOModelClient
+from raclients.modelclient.lora import ModelClient as LoRaModelClient
+from raclients.modelclient.mo import ModelClient as MOModelClient
 from ramodels.lora import Facet
 from ramodels.lora import Organisation
 from ramodels.mo import FacetClass
@@ -42,7 +42,7 @@ async def ensure_root_organisation(
         user_key=user_key,
         municipality_code=municipality_code,
     )
-    await lora_model_client.load_lora_objs([root_organisation])
+    await lora_model_client.upload([root_organisation])
     return cast(UUID, root_organisation.uuid)
 
 
@@ -75,7 +75,7 @@ async def ensure_facets(
         )
         for user_key in user_keys
     ]
-    await lora_model_client.load_lora_objs(facets)
+    await lora_model_client.upload(facets)
     return facets
 
 
@@ -114,7 +114,7 @@ async def ensure_classes(
         for facet_user_key, facet in facet_classes_config.items()
         for class_user_key, klass in facet.items()
     ]
-    await mo_model_client.load_mo_objs(classes)
+    await mo_model_client.upload(classes)
     return classes
 
 
