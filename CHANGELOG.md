@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.2.1 - 2022-01-26
+------------------
+
+[#48187] Fix linting issues
+
 0.2.0 - 2022-01-26
 ------------------
 
