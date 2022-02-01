@@ -65,6 +65,8 @@ facets:
       title: "Manuelt primær ansættelse"
       scope: "5000"
   org_unit_hierarchy: {}
+  kle_number: {}
+  kle_aspect: {}
 
 #it_systems:
 #  AD: "Active Directory"
