@@ -58,6 +58,12 @@ services:
         read_only: true
 ```
 
+Ad-hoc usage can be done as follows:
+```bash
+docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml magentaaps/os2mo-init:latest --mo-url=<...>
+```
+Optionally with the `--network=host` or `--network=os2mo_default` docker flag.
+
 
 ## Deployment
 Initialisation setup is configured using a configuration file; `/config/config.yml` by default. The provided Docker
@@ -109,7 +115,7 @@ Successfully tagged os2mo-init:latest
 ```
 After which you can run:
 ```commandline
-docker run --rm os2mo-init --help
+docker run --rm os2mo-init:latest --help
 ```
 
 
