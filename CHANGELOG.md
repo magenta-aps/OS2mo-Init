@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.3.0 - 2022-02-01
+------------------
+
+[#47744] Add kle_number & kle_aspect in config.default.yml
+
 0.2.1 - 2022-01-26
 ------------------
 
