@@ -18,7 +18,7 @@ class ConfigRootOrganisation(BaseModel):
 
 class ConfigClass(BaseModel):
     title: str
-    scope: str
+    scope: Optional[str]
 
 
 class ConfigFacet(BaseModel):
