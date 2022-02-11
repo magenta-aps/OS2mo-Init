@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.4.0 - 2022-02-11
+------------------
+
+[#48565] Make Class scope optional
+
 0.3.0 - 2022-02-01
 ------------------
 
