@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.4.1 - 2022-07-20
+------------------
+
+[#47121] Added Raise HTTP Status errors
+
 0.4.0 - 2022-02-11
 ------------------
 
