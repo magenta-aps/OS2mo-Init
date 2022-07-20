@@ -63,6 +63,7 @@ async def get_facets(client: AsyncClient, organisation_uuid: UUID) -> dict[str, 
     Returns: Dictionary mapping facet user keys into their UUIDs.
     """
     r = await client.get(f"/service/o/{organisation_uuid}/f/")
+    r.raise_for_status()
     facets = r.json()
     return {f["user_key"]: UUID(f["uuid"]) for f in facets}
 
@@ -80,6 +81,7 @@ async def get_classes_for_facet(
     Returns: List of class dicts for the given facet.
     """
     r = await client.get(f"/service/f/{facet_uuid}/")
+    r.raise_for_status()
     return cast(list[dict[str, Any]], r.json()["data"]["items"])
 
 
@@ -123,5 +125,6 @@ async def get_it_systems(
     Returns: Dictionary mapping IT System user keys into their UUIDs.
     """
     r = await client.get(f"/service/o/{organisation_uuid}/it/")
+    r.raise_for_status()
     it_systems = r.json()
     return {i["user_key"]: UUID(i["uuid"]) for i in it_systems}
