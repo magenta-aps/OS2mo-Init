@@ -10,8 +10,8 @@ from raclients.modelclient.lora import ModelClient as LoRaModelClient
 from raclients.modelclient.mo import ModelClient as MOModelClient
 from ramodels.lora import Facet
 from ramodels.lora import Organisation
-from ramodels.mo import FacetClass
 from ramodels.lora.itsystem import ITSystem
+from ramodels.mo import FacetClass
 
 from os2mo_init import mo
 from os2mo_init.config import ConfigFacet
@@ -19,11 +19,11 @@ from os2mo_init.util import generate_uuid
 
 
 async def ensure_root_organisation(
-        lora_model_client: LoRaModelClient,
-        name: str,
-        user_key: str,
-        municipality_code: Optional[int] = None,
-        existing_uuid: Optional[UUID] = None,
+    lora_model_client: LoRaModelClient,
+    name: str,
+    user_key: str,
+    municipality_code: Optional[int] = None,
+    existing_uuid: Optional[UUID] = None,
 ) -> UUID:
     """
     Idempotently ensure a single root organisation exists with the given parameters.
@@ -48,10 +48,10 @@ async def ensure_root_organisation(
 
 
 async def ensure_facets(
-        mo_client: AsyncClient,
-        lora_model_client: LoRaModelClient,
-        organisation_uuid: UUID,
-        user_keys: Iterable[str],
+    mo_client: AsyncClient,
+    lora_model_client: LoRaModelClient,
+    organisation_uuid: UUID,
+    user_keys: Iterable[str],
 ) -> list[Facet]:
     """
     Idempotently ensure the given facets exist.
@@ -81,11 +81,11 @@ async def ensure_facets(
 
 
 async def ensure_classes(
-        mo_client: AsyncClient,
-        mo_model_client: MOModelClient,
-        organisation_uuid: UUID,
-        facet_classes_config: dict[str, ConfigFacet],
-        facet_uuids: dict[str, UUID],
+    mo_client: AsyncClient,
+    mo_model_client: MOModelClient,
+    organisation_uuid: UUID,
+    facet_classes_config: dict[str, ConfigFacet],
+    facet_uuids: dict[str, UUID],
 ) -> list[FacetClass]:
     """
     Idempotently ensure the given classes exist.
@@ -120,10 +120,10 @@ async def ensure_classes(
 
 
 async def ensure_it_systems(
-        mo_client: AsyncClient,
-        lora_model_client: LoRaModelClient,
-        organisation_uuid: UUID,
-        it_systems_config: dict[str, str],
+    mo_client: AsyncClient,
+    lora_model_client: LoRaModelClient,
+    organisation_uuid: UUID,
+    it_systems_config: dict[str, str],
 ) -> list[ITSystem]:
     """
     Idempotently ensure the given IT Systems exist in LoRa.
