@@ -186,7 +186,7 @@ async def run(
         if config.it_systems is not None:
             await initialisers.ensure_it_systems(
                 mo_client=clients.mo_client,
-                lora_client=clients.lora_client,
+                lora_model_client=clients.lora_model_client,
                 organisation_uuid=root_organisation_uuid,
                 it_systems_config=config.it_systems,
             )

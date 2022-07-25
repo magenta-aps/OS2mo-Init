@@ -11,6 +11,7 @@ from raclients.modelclient.mo import ModelClient as MOModelClient
 from ramodels.lora import Facet
 from ramodels.lora import Organisation
 from ramodels.mo import FacetClass
+from ramodels.lora.itsystem import ITSystem
 
 from os2mo_init import mo
 from os2mo_init.config import ConfigFacet
@@ -18,11 +19,11 @@ from os2mo_init.util import generate_uuid
 
 
 async def ensure_root_organisation(
-    lora_model_client: LoRaModelClient,
-    name: str,
-    user_key: str,
-    municipality_code: Optional[int] = None,
-    existing_uuid: Optional[UUID] = None,
+        lora_model_client: LoRaModelClient,
+        name: str,
+        user_key: str,
+        municipality_code: Optional[int] = None,
+        existing_uuid: Optional[UUID] = None,
 ) -> UUID:
     """
     Idempotently ensure a single root organisation exists with the given parameters.
@@ -47,10 +48,10 @@ async def ensure_root_organisation(
 
 
 async def ensure_facets(
-    mo_client: AsyncClient,
-    lora_model_client: LoRaModelClient,
-    organisation_uuid: UUID,
-    user_keys: Iterable[str],
+        mo_client: AsyncClient,
+        lora_model_client: LoRaModelClient,
+        organisation_uuid: UUID,
+        user_keys: Iterable[str],
 ) -> list[Facet]:
     """
     Idempotently ensure the given facets exist.
@@ -80,11 +81,11 @@ async def ensure_facets(
 
 
 async def ensure_classes(
-    mo_client: AsyncClient,
-    mo_model_client: MOModelClient,
-    organisation_uuid: UUID,
-    facet_classes_config: dict[str, ConfigFacet],
-    facet_uuids: dict[str, UUID],
+        mo_client: AsyncClient,
+        mo_model_client: MOModelClient,
+        organisation_uuid: UUID,
+        facet_classes_config: dict[str, ConfigFacet],
+        facet_uuids: dict[str, UUID],
 ) -> list[FacetClass]:
     """
     Idempotently ensure the given classes exist.
@@ -119,63 +120,39 @@ async def ensure_classes(
 
 
 async def ensure_it_systems(
-    mo_client: AsyncClient,
-    lora_client: AsyncClient,
-    organisation_uuid: UUID,
-    it_systems_config: dict[str, str],
-) -> dict[UUID, dict]:
+        mo_client: AsyncClient,
+        lora_model_client: LoRaModelClient,
+        organisation_uuid: UUID,
+        it_systems_config: dict[str, str],
+) -> list[ITSystem]:
     """
     Idempotently ensure the given IT Systems exist in LoRa.
 
     Args:
         mo_client: Authenticated MO client.
-        lora_client: Authenticated LoRa client.
+        lora_model_client: LoRa model client.
         organisation_uuid: Root organisation UUID the IT Systems are created under.
         it_systems_config: Dictionary mapping IT System user keys into names.
 
     Returns: Dictionary of (potentially created or updated) IT systems.
     """
-    # TODO: Implement using proper classes once #47122 is done.
     existing_it_systems = await mo.get_it_systems(
         client=mo_client,
         organisation_uuid=organisation_uuid,
     )
-
-    def get_it_system(user_key: str, name: str) -> tuple[UUID, dict]:
-        it_system_uuid = existing_it_systems.get(
-            user_key, generate_uuid(f"it_systems.{user_key}")
+    it_systems = [
+        ITSystem.from_simplified_fields(
+            uuid=existing_it_systems.get(
+                user_key, generate_uuid(f"it_systems.{user_key}")
+            ),
+            state="Aktiv",
+            user_key=user_key,
+            name=name,
+            from_date="1930-01-01",
+            to_date="infinity",
+            affiliated_orgs=[organisation_uuid],
         )
-        validity = {
-            "from": "1930-01-01",  # the beginning of the universe according to LoRa
-            "to": "infinity",
-        }
-        it_system = {
-            "attributter": {
-                "itsystemegenskaber": [
-                    {
-                        "brugervendtnoegle": user_key,
-                        "integrationsdata": "",
-                        "itsystemnavn": name,
-                        "virkning": validity,
-                    }
-                ]
-            },
-            "tilstande": {
-                "itsystemgyldighed": [{"gyldighed": "Aktiv", "virkning": validity}]
-            },
-            "relationer": {
-                "tilhoerer": [{"uuid": str(organisation_uuid), "virkning": validity}]
-            },
-        }
-        return it_system_uuid, it_system
-
-    it_systems = dict(
-        get_it_system(user_key=user_key, name=name)
         for user_key, name in it_systems_config.items()
-    )
-    for uuid, it_system in it_systems.items():
-        await lora_client.put(
-            url=f"/organisation/itsystem/{uuid}",
-            json=it_system,
-        )
+    ]
+    await lora_model_client.upload(it_systems)
     return it_systems
