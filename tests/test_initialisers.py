@@ -144,12 +144,18 @@ async def test_ensure_it_systems(
     lora_model_client_mock.upload.assert_awaited_once()
     actual_systems: list[ITSystem] = lora_model_client_mock.upload.await_args.args[0]
 
+    # AD updated with original UUID
     assert actual_systems[0].uuid == UUID(it_systems_mock["AD"]["uuid"])
     assert actual_systems[0].uuid == UUID("cf0d2b85-df02-41de-98c8-2130f11712ec")
-
     assert actual_systems[0].attributes.properties[0].user_key == "AD"
     assert actual_systems[0].attributes.properties[0].name == "New AD Name"
 
+    # OpenDesk created with UUID from generate_uuid()
+    assert (
+        actual_systems[1].uuid
+        == generate_uuid("it_systems.OpenDesk")
+        == UUID("d2ef5d9a-d5dc-a522-1df1-62cecf012c92")
+    )
     assert actual_systems[1].attributes.properties[0].user_key == "OpenDesk"
     assert actual_systems[1].attributes.properties[0].name == "The Open Desk"
 
