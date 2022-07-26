@@ -5,6 +5,7 @@ from uuid import UUID
 
 import pytest
 from httpx import AsyncClient
+from ramodels.lora import ITSystem
 from respx import MockRouter
 
 from os2mo_init import initialisers
@@ -141,9 +142,15 @@ async def test_ensure_it_systems(
     )
 
     lora_model_client_mock.upload.assert_awaited_once()
-    actual_systems = lora_model_client_mock.upload.await_args.args[0]
+    actual_systems: list[ITSystem] = lora_model_client_mock.upload.await_args.args[0]
 
     assert actual_systems[0].uuid == UUID(it_systems_mock["AD"]["uuid"])
-    assert actual_systems[1].uuid == UUID("d2ef5d9a-d5dc-a522-1df1-62cecf012c92")
+    assert actual_systems[0].uuid == UUID("cf0d2b85-df02-41de-98c8-2130f11712ec")
+
+    assert actual_systems[0].attributes.properties[0].user_key == "AD"
+    assert actual_systems[0].attributes.properties[0].name == "New AD Name"
+
+    assert actual_systems[1].attributes.properties[0].user_key == "OpenDesk"
+    assert actual_systems[1].attributes.properties[0].name == "The Open Desk"
 
     respx_mock.assert_all_called()

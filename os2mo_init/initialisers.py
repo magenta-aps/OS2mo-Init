@@ -97,7 +97,7 @@ async def ensure_classes(
         facet_classes_config: Dictionary mapping facet user keys into ConfigFacets.
         facet_uuids: Dictionary mapping facet user keys into UUIDs.
 
-    Returns: List of (potentially created or updated) facet objects.
+    Returns: List of (potentially created or updated) class objects.
     """
     existing_classes = await mo.get_classes(client=mo_client, facets=facet_uuids)
     classes = [
@@ -134,7 +134,7 @@ async def ensure_it_systems(
         organisation_uuid: Root organisation UUID the IT Systems are created under.
         it_systems_config: Dictionary mapping IT System user keys into names.
 
-    Returns: Dictionary of (potentially created or updated) IT systems.
+    Returns: List of (potentially created or updated) IT systems.
     """
     existing_it_systems = await mo.get_it_systems(
         client=mo_client,
