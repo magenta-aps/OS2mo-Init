@@ -5,6 +5,7 @@ from uuid import UUID
 
 import pytest
 from httpx import AsyncClient
+from ramodels.lora import ITSystem
 from respx import MockRouter
 
 from os2mo_init import initialisers
@@ -127,30 +128,35 @@ async def test_ensure_it_systems(
     it_systems_mock: dict[str, dict[str, str]],
     respx_mock: MockRouter,
 ) -> None:
+    lora_model_client_mock = AsyncMock()
     it_systems_config = {
         "AD": "New AD Name",
         "OpenDesk": "The Open Desk",
     }
 
-    ad_uuid = it_systems_mock["AD"]["uuid"]
-    respx_mock.put(
-        f"{async_client.base_url}/organisation/itsystem/{ad_uuid}",
-        json__attributter__itsystemegenskaber__0__brugervendtnoegle="AD",
-        json__attributter__itsystemegenskaber__0__itsystemnavn="New AD Name",
-    )
-    open_desk_uuid = generate_uuid("it_systems.OpenDesk")
-    respx_mock.put(
-        f"{async_client.base_url}/organisation/itsystem/{open_desk_uuid}",
-        json__attributter__itsystemegenskaber__0__brugervendtnoegle="OpenDesk",
-        json__attributter__itsystemegenskaber__0__itsystemnavn="The Open Desk",
-    )
-
     await initialisers.ensure_it_systems(
         mo_client=async_client,
-        lora_client=async_client,
+        lora_model_client=lora_model_client_mock,
         organisation_uuid=root_org_uuid,
         it_systems_config=it_systems_config,
     )
 
-    assert open_desk_uuid == UUID("d2ef5d9a-d5dc-a522-1df1-62cecf012c92")
+    lora_model_client_mock.upload.assert_awaited_once()
+    actual_systems: list[ITSystem] = lora_model_client_mock.upload.await_args.args[0]
+
+    # AD updated with original UUID
+    assert actual_systems[0].uuid == UUID(it_systems_mock["AD"]["uuid"])
+    assert actual_systems[0].uuid == UUID("cf0d2b85-df02-41de-98c8-2130f11712ec")
+    assert actual_systems[0].attributes.properties[0].user_key == "AD"
+    assert actual_systems[0].attributes.properties[0].name == "New AD Name"
+
+    # OpenDesk created with UUID from generate_uuid()
+    assert (
+        actual_systems[1].uuid
+        == generate_uuid("it_systems.OpenDesk")
+        == UUID("d2ef5d9a-d5dc-a522-1df1-62cecf012c92")
+    )
+    assert actual_systems[1].attributes.properties[0].user_key == "OpenDesk"
+    assert actual_systems[1].attributes.properties[0].name == "The Open Desk"
+
     respx_mock.assert_all_called()

@@ -10,6 +10,7 @@ from raclients.modelclient.lora import ModelClient as LoRaModelClient
 from raclients.modelclient.mo import ModelClient as MOModelClient
 from ramodels.lora import Facet
 from ramodels.lora import Organisation
+from ramodels.lora.itsystem import ITSystem
 from ramodels.mo import FacetClass
 
 from os2mo_init import mo
@@ -96,7 +97,7 @@ async def ensure_classes(
         facet_classes_config: Dictionary mapping facet user keys into ConfigFacets.
         facet_uuids: Dictionary mapping facet user keys into UUIDs.
 
-    Returns: List of (potentially created or updated) facet objects.
+    Returns: List of (potentially created or updated) class objects.
     """
     existing_classes = await mo.get_classes(client=mo_client, facets=facet_uuids)
     classes = [
@@ -120,62 +121,38 @@ async def ensure_classes(
 
 async def ensure_it_systems(
     mo_client: AsyncClient,
-    lora_client: AsyncClient,
+    lora_model_client: LoRaModelClient,
     organisation_uuid: UUID,
     it_systems_config: dict[str, str],
-) -> dict[UUID, dict]:
+) -> list[ITSystem]:
     """
     Idempotently ensure the given IT Systems exist in LoRa.
 
     Args:
         mo_client: Authenticated MO client.
-        lora_client: Authenticated LoRa client.
+        lora_model_client: LoRa model client.
         organisation_uuid: Root organisation UUID the IT Systems are created under.
         it_systems_config: Dictionary mapping IT System user keys into names.
 
-    Returns: Dictionary of (potentially created or updated) IT systems.
+    Returns: List of (potentially created or updated) IT systems.
     """
-    # TODO: Implement using proper classes once #47122 is done.
     existing_it_systems = await mo.get_it_systems(
         client=mo_client,
         organisation_uuid=organisation_uuid,
     )
-
-    def get_it_system(user_key: str, name: str) -> tuple[UUID, dict]:
-        it_system_uuid = existing_it_systems.get(
-            user_key, generate_uuid(f"it_systems.{user_key}")
+    it_systems = [
+        ITSystem.from_simplified_fields(
+            uuid=existing_it_systems.get(
+                user_key, generate_uuid(f"it_systems.{user_key}")
+            ),
+            state="Aktiv",
+            user_key=user_key,
+            name=name,
+            from_date="1930-01-01",
+            to_date="infinity",
+            affiliated_orgs=[organisation_uuid],
         )
-        validity = {
-            "from": "1930-01-01",  # the beginning of the universe according to LoRa
-            "to": "infinity",
-        }
-        it_system = {
-            "attributter": {
-                "itsystemegenskaber": [
-                    {
-                        "brugervendtnoegle": user_key,
-                        "integrationsdata": "",
-                        "itsystemnavn": name,
-                        "virkning": validity,
-                    }
-                ]
-            },
-            "tilstande": {
-                "itsystemgyldighed": [{"gyldighed": "Aktiv", "virkning": validity}]
-            },
-            "relationer": {
-                "tilhoerer": [{"uuid": str(organisation_uuid), "virkning": validity}]
-            },
-        }
-        return it_system_uuid, it_system
-
-    it_systems = dict(
-        get_it_system(user_key=user_key, name=name)
         for user_key, name in it_systems_config.items()
-    )
-    for uuid, it_system in it_systems.items():
-        await lora_client.put(
-            url=f"/organisation/itsystem/{uuid}",
-            json=it_system,
-        )
+    ]
+    await lora_model_client.upload(it_systems)
     return it_systems
