@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+0.5.0 - 2022-07-27
+------------------
+
+[#47121] Implemented class usage for uploading object to LORA
+
 0.4.1 - 2022-07-20
 ------------------
 
