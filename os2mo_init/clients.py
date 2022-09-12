@@ -35,9 +35,6 @@ async def get_clients(
     client_secret: str,
     auth_realm: str,
     lora_url: AnyHttpUrl,
-    lora_client_id: str,
-    lora_client_secret: str,
-    lora_auth_realm: str,
 ) -> AsyncIterator[Clients]:
     """
     Get GraphQL, HTTP, and Model Clients.
@@ -49,9 +46,6 @@ async def get_clients(
         client_secret: Client secret used to authenticate against OS2mo.
         auth_realm: Keycloak realm for OS2mo authentication.
         lora_url: LoRa URL.
-        lora_client_id: Client ID used to authenticate against LoRa.
-        lora_client_secret: Client secret used to authenticate against LoRa.
-        lora_auth_realm: Keycloak realm for LoRa authentication.
 
     Yields: Clients object containing opened clients.
     """
@@ -64,12 +58,6 @@ async def get_clients(
         auth_realm=auth_realm,
         auth_server=auth_server,
     )
-    lora_auth_settings = dict(
-        client_id=lora_client_id,
-        client_secret=lora_client_secret,
-        auth_realm=lora_auth_realm,
-        auth_server=auth_server,
-    )
 
     mo_graphql_client = GraphQLClient(
         url=f"{mo_url}/graphql",
@@ -80,9 +68,8 @@ async def get_clients(
         base_url=mo_url,
         **mo_auth_settings,
     )
-    lora_client = AuthenticatedAsyncHTTPXClient(
+    lora_client = AsyncClient(
         base_url=lora_url,
-        **lora_auth_settings,
     )
 
     mo_model_client = MoModelClient(
@@ -91,7 +78,6 @@ async def get_clients(
     )
     lora_model_client = LoRaModelClient(
         base_url=lora_url,
-        **lora_auth_settings,
     )
 
     async with AsyncExitStack() as stack:

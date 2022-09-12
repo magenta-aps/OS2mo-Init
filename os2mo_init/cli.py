@@ -74,7 +74,6 @@ logger = get_logger(__name__)
 @click.option(
     "--lora-client-id",
     help="Client ID used to authenticate against LoRa.",
-    required=True,
     default="dipex",
     envvar="LORA_CLIENT_ID",
     show_envvar=True,
@@ -82,14 +81,12 @@ logger = get_logger(__name__)
 @click.option(
     "--lora-client-secret",
     help="Client secret used to authenticate against LoRa.",
-    required=True,
     envvar="LORA_CLIENT_SECRET",
     show_envvar=True,
 )
 @click.option(
     "--lora-auth-realm",
     help="Keycloak realm for LoRa authentication.",
-    required=True,
     default="lora",
     envvar="LORA_AUTH_REALM",
     show_envvar=True,
@@ -122,9 +119,9 @@ async def run(
     client_secret: str,
     auth_realm: str,
     lora_url: AnyHttpUrl,
-    lora_client_id: str,
-    lora_client_secret: str,
-    lora_auth_realm: str,
+    lora_client_id: str,  # Deprecated
+    lora_client_secret: str,  # Deprecated
+    lora_auth_realm: str,  # Deprecated
     config_file: TextIOWrapper,
     log_level: str,
 ) -> None:
@@ -140,9 +137,6 @@ async def run(
         client_secret=client_secret,
         auth_realm=auth_realm,
         lora_url=lora_url,
-        lora_client_id=lora_client_id,
-        lora_client_secret=lora_client_secret,
-        lora_auth_realm=lora_auth_realm,
     ) as clients:
 
         # Root Organisation
