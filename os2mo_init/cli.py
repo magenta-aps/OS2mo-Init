@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from io import TextIOWrapper
+from typing import Optional
 
 import click
 from pydantic import AnyHttpUrl
@@ -74,7 +75,6 @@ logger = get_logger(__name__)
 @click.option(
     "--lora-client-id",
     help="Client ID used to authenticate against LoRa.",
-    required=True,
     default="dipex",
     envvar="LORA_CLIENT_ID",
     show_envvar=True,
@@ -82,14 +82,12 @@ logger = get_logger(__name__)
 @click.option(
     "--lora-client-secret",
     help="Client secret used to authenticate against LoRa.",
-    required=True,
     envvar="LORA_CLIENT_SECRET",
     show_envvar=True,
 )
 @click.option(
     "--lora-auth-realm",
     help="Keycloak realm for LoRa authentication.",
-    required=True,
     default="lora",
     envvar="LORA_AUTH_REALM",
     show_envvar=True,
@@ -122,15 +120,22 @@ async def run(
     client_secret: str,
     auth_realm: str,
     lora_url: AnyHttpUrl,
-    lora_client_id: str,
-    lora_client_secret: str,
-    lora_auth_realm: str,
+    lora_client_id: Optional[str],  # Deprecated
+    lora_client_secret: Optional[str],  # Deprecated
+    lora_auth_realm: Optional[str],  # Deprecated
     config_file: TextIOWrapper,
     log_level: str,
 ) -> None:
 
     set_log_level(log_level)
     logger.info("Application startup")
+
+    if (
+        lora_client_id is not None
+        or lora_client_secret is not None
+        or lora_auth_realm is not None
+    ):
+        logger.warn("LoRa authentication has been deprecated")
 
     config = get_config(config_file)
     async with get_clients(
@@ -140,9 +145,6 @@ async def run(
         client_secret=client_secret,
         auth_realm=auth_realm,
         lora_url=lora_url,
-        lora_client_id=lora_client_id,
-        lora_client_secret=lora_client_secret,
-        lora_auth_realm=lora_auth_realm,
     ) as clients:
 
         # Root Organisation
