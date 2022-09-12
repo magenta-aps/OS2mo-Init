@@ -130,6 +130,13 @@ async def run(
     set_log_level(log_level)
     logger.info("Application startup")
 
+    if (
+        lora_client_id is not None
+        or lora_client_secret is not None
+        or lora_auth_realm is not None
+    ):
+        logger.warn("LoRa authentication has been deprecated")
+
     config = get_config(config_file)
     async with get_clients(
         auth_server=auth_server,
