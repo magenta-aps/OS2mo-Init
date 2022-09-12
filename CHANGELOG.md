@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+1.0.0 - 2022-09-12
+------------------
+
+[#51980] Call LoRa without authentication
+
 0.5.0 - 2022-07-27
 ------------------
 
