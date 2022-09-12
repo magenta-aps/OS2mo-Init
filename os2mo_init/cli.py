@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from io import TextIOWrapper
+from typing import Optional
 
 import click
 from pydantic import AnyHttpUrl
@@ -119,9 +120,9 @@ async def run(
     client_secret: str,
     auth_realm: str,
     lora_url: AnyHttpUrl,
-    lora_client_id: str,  # Deprecated
-    lora_client_secret: str,  # Deprecated
-    lora_auth_realm: str,  # Deprecated
+    lora_client_id: Optional[str],  # Deprecated
+    lora_client_secret: Optional[str],  # Deprecated
+    lora_auth_realm: Optional[str],  # Deprecated
     config_file: TextIOWrapper,
     log_level: str,
 ) -> None:
