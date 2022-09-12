@@ -11,7 +11,7 @@ from raclients.modelclient.mo import ModelClient as MOModelClient
 from ramodels.lora import Facet
 from ramodels.lora import Organisation
 from ramodels.lora.itsystem import ITSystem
-from ramodels.mo import FacetClass
+from ramodels.mo import ClassWrite
 
 from os2mo_init import mo
 from os2mo_init.config import ConfigFacet
@@ -86,7 +86,7 @@ async def ensure_classes(
     organisation_uuid: UUID,
     facet_classes_config: dict[str, ConfigFacet],
     facet_uuids: dict[str, UUID],
-) -> list[FacetClass]:
+) -> list[ClassWrite]:
     """
     Idempotently ensure the given classes exist.
 
@@ -101,7 +101,7 @@ async def ensure_classes(
     """
     existing_classes = await mo.get_classes(client=mo_client, facets=facet_uuids)
     classes = [
-        FacetClass(
+        ClassWrite(
             uuid=existing_classes[facet_user_key].get(
                 class_user_key,
                 generate_uuid(f"facets.{facet_user_key}.classes.{class_user_key}"),
