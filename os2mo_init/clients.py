@@ -60,7 +60,7 @@ async def get_clients(
     )
 
     mo_graphql_client = GraphQLClient(
-        url=f"{mo_url}/graphql/v2",
+        url=f"{mo_url}/graphql/v3",
         **mo_auth_settings,
     )
 
