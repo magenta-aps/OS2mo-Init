@@ -6,6 +6,11 @@ SPDX-License-Identifier: MPL-2.0
 CHANGELOG
 =========
 
+1.1.1 - 2022-12-02
+------------------
+
+[#48884] Updated documentation for use of os2mo-init since LoRA will be hosted internally by MO
+
 1.1.0 - 2022-11-23
 ------------------
 

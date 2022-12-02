@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "os2mo-init"
-version = "1.1.0"
+version = "1.1.1"
 description = "Database initialiser for OS2mo"
 authors = ["Magenta <info@magenta.dk>"]
 license = "MPL-2.0"
