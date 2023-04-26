@@ -68,7 +68,8 @@ As LoRA is now hosted internally by MO, henceforth this command may be used as f
 ```bash
 sudo docker run --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host --rm magentaaps/os2mo-init:latest --auth-server="http://localhost:8090/auth" --mo-url="http://localhost:5000" --client-id=dipex --client-secret=InsertSecret --auth-realm=mo --lora-url="http://localhost:5000/lora"
 ```
-
+Note that if your installation of MO does not run the docker container `mora_service` on port `127.0.0.1:5000:5000`,
+be sure to rectify the port number in the above commands to the one corresponding to your installation. 
 
 ## Deployment
 Initialisation setup is configured using a configuration file; `/config/config.yml` by default. The provided Docker
