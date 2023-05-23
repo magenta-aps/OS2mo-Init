@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-import asyncio
 from typing import Any
 from typing import cast
 from typing import Optional
@@ -10,6 +9,7 @@ from gql import gql
 from gql.client import AsyncClientSession
 from gql.transport.exceptions import TransportQueryError
 from httpx import AsyncClient
+from ra_utils.asyncio_utils import gather_with_concurrency
 from structlog import get_logger
 
 logger = get_logger(__name__)
@@ -102,7 +102,9 @@ async def get_classes(
         get_classes_for_facet(client=client, facet_uuid=facet_uuid)
         for facet_uuid in facets.values()
     )
-    facets_and_classes = zip(facets.keys(), await asyncio.gather(*classes_for_facets))
+    facets_and_classes = zip(
+        facets.keys(), await gather_with_concurrency(5, *classes_for_facets)
+    )
     return {
         facet_user_key: {
             facet_class["user_key"]: UUID(facet_class["uuid"])
