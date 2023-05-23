@@ -10,6 +10,7 @@ from gql.client import AsyncClientSession
 from httpx import AsyncClient
 from pydantic import AnyHttpUrl
 from raclients.auth import AuthenticatedAsyncHTTPXClient
+from raclients.auth import keycloak_token_endpoint
 from raclients.graph.client import GraphQLClient
 from raclients.modelclient.lora import ModelClient as LoRaModelClient
 from raclients.modelclient.mo import ModelClient as MoModelClient
@@ -52,21 +53,22 @@ async def get_clients(
 
     logger.debug("Getting GraphQL, HTTP and Model clients...")
 
-    mo_auth_settings = dict(
+    mo_graphql_client = GraphQLClient(
+        url=f"{mo_url}/graphql/v3",
         client_id=client_id,
         client_secret=client_secret,
         auth_realm=auth_realm,
         auth_server=auth_server,
     )
 
-    mo_graphql_client = GraphQLClient(
-        url=f"{mo_url}/graphql/v3",
-        **mo_auth_settings,
-    )
-
     mo_client = AuthenticatedAsyncHTTPXClient(
         base_url=mo_url,
-        **mo_auth_settings,
+        client_id=client_id,
+        client_secret=client_secret,
+        token_endpoint=keycloak_token_endpoint(
+            auth_server=auth_server,
+            auth_realm=auth_realm,
+        ),
     )
     lora_client = AsyncClient(
         base_url=lora_url,
@@ -74,7 +76,10 @@ async def get_clients(
 
     mo_model_client = MoModelClient(
         base_url=mo_url,
-        **mo_auth_settings,
+        client_id=client_id,
+        client_secret=client_secret,
+        auth_realm=auth_realm,
+        auth_server=auth_server,
     )
     lora_model_client = LoRaModelClient(
         base_url=lora_url,
