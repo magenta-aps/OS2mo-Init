@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from io import TextIOWrapper
-from typing import Optional
 
 import click
 from pydantic import AnyHttpUrl
@@ -10,13 +9,28 @@ from structlog import get_logger
 
 from os2mo_init import initialisers
 from os2mo_init import mo
-from os2mo_init.clients import get_clients
 from os2mo_init.config import get_config
 from os2mo_init.config import set_log_level
 from os2mo_init.util import validate_url
+from raclients.graph.client import GraphQLClient
 
+from typing import Any
+from typing import cast
+
+import click
+from pydantic import AnyHttpUrl
+from pydantic import parse_obj_as
+from pydantic import ValidationError
 
 logger = get_logger(__name__)
+
+
+def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
+    try:
+        return cast(AnyHttpUrl, parse_obj_as(AnyHttpUrl, value))
+    except ValidationError as e:
+        raise click.BadParameter(str(e))
+
 
 
 @click.command(
@@ -65,34 +79,6 @@ logger = get_logger(__name__)
     show_envvar=True,
 )
 @click.option(
-    "--lora-url",
-    help="LoRa URL.",
-    required=True,
-    callback=validate_url,
-    envvar="LORA_URL",
-    show_envvar=True,
-)
-@click.option(
-    "--lora-client-id",
-    help="Client ID used to authenticate against LoRa.",
-    default="dipex",
-    envvar="LORA_CLIENT_ID",
-    show_envvar=True,
-)
-@click.option(
-    "--lora-client-secret",
-    help="Client secret used to authenticate against LoRa.",
-    envvar="LORA_CLIENT_SECRET",
-    show_envvar=True,
-)
-@click.option(
-    "--lora-auth-realm",
-    help="Keycloak realm for LoRa authentication.",
-    default="lora",
-    envvar="LORA_AUTH_REALM",
-    show_envvar=True,
-)
-@click.option(
     "--config-file",
     help="Path to initialisation config file.",
     type=click.File(),
@@ -119,10 +105,6 @@ async def run(
     client_id: str,
     client_secret: str,
     auth_realm: str,
-    lora_url: AnyHttpUrl,
-    lora_client_id: Optional[str],  # Deprecated
-    lora_client_secret: Optional[str],  # Deprecated
-    lora_auth_realm: Optional[str],  # Deprecated
     config_file: TextIOWrapper,
     log_level: str,
 ) -> None:
@@ -130,23 +112,18 @@ async def run(
     set_log_level(log_level)
     logger.info("Application startup")
 
-    if (
-        lora_client_id is not None
-        or lora_client_secret is not None
-        or lora_auth_realm is not None
-    ):
-        logger.warn("LoRa authentication has been deprecated")
-
     config = get_config(config_file)
-    async with get_clients(
-        auth_server=auth_server,
-        mo_url=mo_url,
+    
+    logger.debug("Creating clients...")
+
+    mo_graphql_client = GraphQLClient(
+        url=f"{mo_url}/graphql/v7",
         client_id=client_id,
         client_secret=client_secret,
         auth_realm=auth_realm,
-        lora_url=lora_url,
-    ) as clients:
-
+        auth_server=auth_server,
+    )
+    async with mo_graphql_client as mo_graphql_session:
         # Root Organisation
 
         logger.info("Handling root organisation")
