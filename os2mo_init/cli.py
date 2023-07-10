@@ -1,25 +1,35 @@
-# SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from io import TextIOWrapper
-from typing import Optional
+from typing import Any
+from typing import cast
 
 import click
 from pydantic import AnyHttpUrl
+from pydantic import parse_obj_as
+from pydantic import ValidationError
 from ra_utils.async_to_sync import async_to_sync
+from raclients.graph.client import GraphQLClient
 from structlog import get_logger
 
-from os2mo_init import initialisers
-from os2mo_init import mo
-from os2mo_init.clients import get_clients
+from os2mo_init.classes import ensure_classes
 from os2mo_init.config import get_config
 from os2mo_init.config import set_log_level
-from os2mo_init.util import validate_url
-
+from os2mo_init.facets import ensure_facets
+from os2mo_init.it_systems import ensure_it_systems
+from os2mo_init.root_org import ensure_root_organisation
 
 logger = get_logger(__name__)
 
 
-@click.command(
+def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
+    try:
+        return cast(AnyHttpUrl, parse_obj_as(AnyHttpUrl, value))
+    except ValidationError as e:
+        raise click.BadParameter(str(e))
+
+
+@click.command(  # type: ignore
     context_settings=dict(
         show_default=True,
         max_content_width=120,
@@ -65,34 +75,6 @@ logger = get_logger(__name__)
     show_envvar=True,
 )
 @click.option(
-    "--lora-url",
-    help="LoRa URL.",
-    required=True,
-    callback=validate_url,
-    envvar="LORA_URL",
-    show_envvar=True,
-)
-@click.option(
-    "--lora-client-id",
-    help="Client ID used to authenticate against LoRa.",
-    default="dipex",
-    envvar="LORA_CLIENT_ID",
-    show_envvar=True,
-)
-@click.option(
-    "--lora-client-secret",
-    help="Client secret used to authenticate against LoRa.",
-    envvar="LORA_CLIENT_SECRET",
-    show_envvar=True,
-)
-@click.option(
-    "--lora-auth-realm",
-    help="Keycloak realm for LoRa authentication.",
-    default="lora",
-    envvar="LORA_AUTH_REALM",
-    show_envvar=True,
-)
-@click.option(
     "--config-file",
     help="Path to initialisation config file.",
     type=click.File(),
@@ -119,76 +101,30 @@ async def run(
     client_id: str,
     client_secret: str,
     auth_realm: str,
-    lora_url: AnyHttpUrl,
-    lora_client_id: Optional[str],  # Deprecated
-    lora_client_secret: Optional[str],  # Deprecated
-    lora_auth_realm: Optional[str],  # Deprecated
     config_file: TextIOWrapper,
     log_level: str,
 ) -> None:
-
     set_log_level(log_level)
     logger.info("Application startup")
-
-    if (
-        lora_client_id is not None
-        or lora_client_secret is not None
-        or lora_auth_realm is not None
-    ):
-        logger.warn("LoRa authentication has been deprecated")
-
     config = get_config(config_file)
-    async with get_clients(
-        auth_server=auth_server,
-        mo_url=mo_url,
+    graphql_client = GraphQLClient(
+        url=f"{mo_url}/graphql/v7",
         client_id=client_id,
         client_secret=client_secret,
         auth_realm=auth_realm,
-        lora_url=lora_url,
-    ) as clients:
-
+        auth_server=auth_server,
+    )
+    async with graphql_client as graphql_session:
         # Root Organisation
-
-        logger.info("Handling root organisation")
-
-        root_organisation_uuid = await mo.get_root_org(clients.mo_graphql_session)
-        logger.debug("Existing root organisation", uuid=root_organisation_uuid)
-
         if config.root_organisation is not None:
-            root_organisation_uuid = await initialisers.ensure_root_organisation(
-                lora_model_client=clients.lora_model_client,
-                existing_uuid=root_organisation_uuid,
-                **config.root_organisation.dict(),
-            )
-        if root_organisation_uuid is None:
-            raise ValueError(
-                "No root organisation configuration supplied, but none exist in MO."
-                "Unable to continue."
-            )
+            logger.info("Handling root organisation")
+            await ensure_root_organisation(graphql_session, config.root_organisation)
 
-        # Facets and Classes
+        # Facets
         if config.facets is not None:
-            facet_user_keys = config.facets.keys()
-            facets = await initialisers.ensure_facets(
-                mo_client=clients.mo_client,
-                lora_model_client=clients.lora_model_client,
-                organisation_uuid=root_organisation_uuid,
-                user_keys=facet_user_keys,
-            )
-            facet_uuids = dict(zip(facet_user_keys, (f.uuid for f in facets)))
-            await initialisers.ensure_classes(
-                mo_client=clients.mo_client,
-                mo_model_client=clients.mo_model_client,
-                organisation_uuid=root_organisation_uuid,
-                facet_classes_config=config.facets,
-                facet_uuids=facet_uuids,
-            )
+            await ensure_facets(graphql_session, set(config.facets.keys()))
+            await ensure_classes(graphql_session, config.facets)
 
         # IT Systems
         if config.it_systems is not None:
-            await initialisers.ensure_it_systems(
-                mo_client=clients.mo_client,
-                lora_model_client=clients.lora_model_client,
-                organisation_uuid=root_organisation_uuid,
-                it_systems_config=config.it_systems,
-            )
+            await ensure_it_systems(graphql_session, config.it_systems)
