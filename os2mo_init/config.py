@@ -1,9 +1,8 @@
-# SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import logging
 from io import TextIOWrapper
 from typing import ItemsView
-from typing import Optional
 
 import structlog
 import yaml
@@ -11,14 +10,12 @@ from pydantic import BaseModel
 
 
 class ConfigRootOrganisation(BaseModel):
-    name: str
-    user_key: str
-    municipality_code: Optional[int]
+    municipality_code: int | None
 
 
 class ConfigClass(BaseModel):
     title: str
-    scope: Optional[str]
+    scope: str | None
 
 
 class ConfigFacet(BaseModel):
@@ -29,9 +26,9 @@ class ConfigFacet(BaseModel):
 
 
 class Config(BaseModel):
-    root_organisation: Optional[ConfigRootOrganisation]
-    facets: Optional[dict[str, ConfigFacet]]
-    it_systems: Optional[dict[str, str]]
+    root_organisation: ConfigRootOrganisation | None
+    facets: dict[str, ConfigFacet] | None
+    it_systems: dict[str, str] | None
 
 
 def get_config(config_file: TextIOWrapper) -> Config:
