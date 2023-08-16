@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-FROM python:3.11@sha256:b7a504dd0affeb20cf1ba1d3219f854c889c7ad557a2a5a4c4aba19cadd075f1
+FROM python:3.11@sha256:e7b98cbd26cbc371e0fdb039f92bb95d566b58296a26ada0fe88b3e24991fcf4
 
 WORKDIR /app
 
