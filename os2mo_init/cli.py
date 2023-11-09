@@ -113,6 +113,10 @@ async def run(
         client_secret=client_secret,
         auth_realm=auth_realm,
         auth_server=auth_server,
+        execute_timeout=30,
+        httpx_client_kwargs=dict(
+            timeout=30,
+        ),
     )
     async with graphql_client as graphql_session:
         # Root Organisation
