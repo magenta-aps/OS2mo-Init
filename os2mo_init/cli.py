@@ -108,7 +108,7 @@ async def run(
     logger.info("Application startup")
     config = get_config(config_file)
     graphql_client = GraphQLClient(
-        url=f"{mo_url}/graphql/v7",
+        url=f"{mo_url}/graphql/v20",
         client_id=client_id,
         client_secret=client_secret,
         auth_realm=auth_realm,

@@ -56,7 +56,7 @@ async def ensure_facets(
     mutation = gql(
         """
         mutation CreateFacetMutation($user_key: String!) {
-          facet_create(input: {user_key: $user_key}) {
+          facet_create(input: {user_key: $user_key, validity: {from: null}}) {
             uuid
           }
         }
