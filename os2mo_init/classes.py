@@ -96,6 +96,9 @@ async def ensure_classes(
               user_key: $user_key,
               name: $name,
               scope: $scope,
+              validity: {
+                from: null,
+              }
             }
           ) {
             uuid
@@ -113,12 +116,15 @@ async def ensure_classes(
           $scope: String!
         ) {
           class_update(
-            uuid: $uuid
             input: {
+              uuid: $uuid
               facet_uuid: $facet_uuid,
               user_key: $user_key
               name: $name,
               scope: $scope,
+              validity: {
+                from: null,
+              }
             }
           ) {
             uuid

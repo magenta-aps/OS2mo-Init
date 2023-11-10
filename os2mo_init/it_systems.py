@@ -68,7 +68,15 @@ async def ensure_it_systems(
     create_mutation = gql(
         """
         mutation CreateITSystemMutation($user_key: String!, $name: String!) {
-          itsystem_create(input: {user_key: $user_key, name: $name}) {
+          itsystem_create(
+            input: {
+              user_key: $user_key,
+              name: $name,
+              validity: {
+                from: null,
+              }
+            }
+          ) {
             uuid
           }
         }
@@ -81,7 +89,16 @@ async def ensure_it_systems(
           $user_key: String!,
           $name: String!
         ) {
-          itsystem_update(uuid: $uuid, input: {user_key: $user_key, name: $name}) {
+          itsystem_update(
+            input: {
+              uuid: $uuid,
+              user_key: $user_key,
+              name: $name,
+              validity: {
+                from: null
+              }
+            }
+          ) {
             uuid
           }
         }
