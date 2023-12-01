@@ -159,6 +159,7 @@ async def ensure_classes(
                     it_system = existing_it_systems_by_user_key[class_data.it_system]
                 except KeyError as e:
                     raise ValueError(
+                        # noqa: E501
                         f"Class '{class_user_key}' cannot be associated with non-existent it-system '{class_data.it_system}'"
                     ) from e
                 it_system_uuid = str(it_system.uuid)
