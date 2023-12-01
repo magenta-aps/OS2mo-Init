@@ -19,6 +19,7 @@ def test_get_config() -> None:
             PhoneUnit:
               title: "Telefon"
               scope: "PHONE"
+              it_system: OS2mo
         it_systems:
           AD: "Active Directory"
     """
@@ -35,6 +36,7 @@ def test_get_config() -> None:
                 "PhoneUnit": {
                     "scope": "PHONE",
                     "title": "Telefon",
+                    "it_system": "OS2mo",
                 },
             }
         },
