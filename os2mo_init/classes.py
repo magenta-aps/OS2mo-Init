@@ -153,6 +153,15 @@ async def ensure_classes(
 
     for facet_user_key, classes in config_classes.items():
         for class_user_key, class_data in classes.items():
+            it_system_uuid = None
+            if class_data.it_system is not None:
+                try:
+                    it_system = existing_it_systems_by_user_key[class_data.it_system]
+                except KeyError as e:
+                    raise ValueError(
+                        f"Class '{class_user_key}' cannot be associated with non-existent it-system '{class_data.it_system}'"
+                    ) from e
+                it_system_uuid = str(it_system.uuid)
             try:
                 existing = existing_classes_by_user_key[facet_user_key][class_user_key]
             except KeyError:
@@ -164,10 +173,7 @@ async def ensure_classes(
                         "user_key": class_user_key,
                         "name": class_data.title,
                         "scope": class_data.scope,
-                        "it_system_uuid": class_data.it_system
-                        and str(
-                            existing_it_systems_by_user_key[class_data.it_system].uuid
-                        ),
+                        "it_system_uuid": it_system_uuid,
                     },
                 )
                 continue
@@ -185,9 +191,6 @@ async def ensure_classes(
                         "user_key": class_user_key,
                         "name": class_data.title,
                         "scope": class_data.scope,
-                        "it_system_uuid": class_data.it_system
-                        and str(
-                            existing_it_systems_by_user_key[class_data.it_system].uuid
-                        ),
+                        "it_system_uuid": it_system_uuid,
                     },
                 )
