@@ -16,6 +16,7 @@ class ConfigRootOrganisation(BaseModel):
 class ConfigClass(BaseModel):
     title: str
     scope: str | None
+    it_system: str | None
 
 
 class ConfigFacet(BaseModel):

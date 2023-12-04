@@ -124,11 +124,12 @@ async def run(
             logger.info("Handling root organisation")
             await ensure_root_organisation(graphql_session, config.root_organisation)
 
+        # IT Systems
+        # NOTE: This MUST come before classes, since they can reference IT-systems
+        if config.it_systems is not None:
+            await ensure_it_systems(graphql_session, config.it_systems)
+
         # Facets
         if config.facets is not None:
             await ensure_facets(graphql_session, set(config.facets.keys()))
             await ensure_classes(graphql_session, config.facets)
-
-        # IT Systems
-        if config.it_systems is not None:
-            await ensure_it_systems(graphql_session, config.it_systems)
