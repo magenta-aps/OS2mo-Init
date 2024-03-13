@@ -32,7 +32,7 @@ services:
       MO_URL: "http://mo"
       AUTH_SERVER: "http://keycloak:8080/auth"
       AUTH_REALM: "mo"
-      CLIENT_ID: "d1fec000-baad-c0de-0000-004449504558"
+      CLIENT_ID: "dipex"
       CLIENT_SECRET: "603f1c82-d012-4d04-9382-dbe659c533fb"
     depends_on:
       mo:
@@ -53,7 +53,7 @@ services:
 
 Ad-hoc usage can be done as follows:
 ```bash
-docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host magentaaps/os2mo-init:latest --mo-url="http://localhost:5000" --auth-server="http://localhost:8090/auth" --client-id=d1fec000-baad-c0de-0000-004449504558 --client-secret=hunter2 --auth-realm=mo
+docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host magentaaps/os2mo-init:latest --mo-url="http://localhost:5000" --auth-server="http://localhost:8090/auth" --client-id=dipex --client-secret=hunter2 --auth-realm=mo
 ```
 Optionally with the `--network=host` or `--network=os2mo_default` docker flag.
 
