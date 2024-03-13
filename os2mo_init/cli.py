@@ -36,14 +36,6 @@ def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
     ),
 )
 @click.option(
-    "--auth-server",
-    help="Keycloak authentication server.",
-    required=True,
-    callback=validate_url,
-    envvar="AUTH_SERVER",
-    show_envvar=True,
-)
-@click.option(
     "--mo-url",
     help="OS2mo URL.",
     required=True,
@@ -52,10 +44,24 @@ def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
     show_envvar=True,
 )
 @click.option(
+    "--auth-server",
+    help="Keycloak authentication server.",
+    required=True,
+    callback=validate_url,
+    envvar="AUTH_SERVER",
+    show_envvar=True,
+)
+@click.option(
+    "--auth-realm",
+    help="Keycloak realm for OS2mo authentication.",
+    required=True,
+    envvar="AUTH_REALM",
+    show_envvar=True,
+)
+@click.option(
     "--client-id",
     help="Client ID used to authenticate against OS2mo.",
     required=True,
-    default="dipex",
     envvar="CLIENT_ID",
     show_envvar=True,
 )
@@ -64,14 +70,6 @@ def validate_url(ctx: click.Context, param: Any, value: Any) -> AnyHttpUrl:
     help="Client secret used to authenticate against OS2mo.",
     required=True,
     envvar="CLIENT_SECRET",
-    show_envvar=True,
-)
-@click.option(
-    "--auth-realm",
-    help="Keycloak realm for OS2mo authentication.",
-    required=True,
-    default="mo",
-    envvar="AUTH_REALM",
     show_envvar=True,
 )
 @click.option(

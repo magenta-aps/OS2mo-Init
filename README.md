@@ -13,17 +13,14 @@ recommended facets, and IT systems.
 Usage: python -m os2mo_init [OPTIONS]
 
 Options:
-  --auth-server TEXT         Keycloak authentication server.  [env var: AUTH_SERVER; required]
-  --mo-url TEXT              OS2mo URL.  [env var: MO_URL; required]
-  --client-id TEXT           Client ID used to authenticate against OS2mo.  [env var: CLIENT_ID; default: dipex; required]
-  --client-secret TEXT       Client secret used to authenticate against OS2mo.  [env var: CLIENT_SECRET; required]
-  --auth-realm TEXT          Keycloak realm for OS2mo authentication.  [env var: AUTH_REALM; default: mo; required]
-  --lora-url TEXT            LoRa URL.  [env var: LORA_URL; required]
-  --lora-client-id TEXT      Client ID used to authenticate against LoRa.  [env var: LORA_CLIENT_ID; default: dipex; required]
-  --lora-client-secret TEXT  Client secret used to authenticate against LoRa.  [env var: LORA_CLIENT_SECRET; required]
-  --lora-auth-realm TEXT     Keycloak realm for LoRa authentication.  [env var: LORA_AUTH_REALM; default: lora; required]
-  --config-file FILENAME     Path to initialisation config file.  [env var: CONFIG_FILE; default: /config/config.yml; required]
-  --help                     Show this message and exit.
+  --mo-url TEXT                   OS2mo URL.  [env var: MO_URL; required]
+  --auth-server TEXT              Keycloak authentication server.  [env var: AUTH_SERVER; required]
+  --auth-realm TEXT               Keycloak realm for OS2mo authentication.  [env var: AUTH_REALM; required]
+  --client-id TEXT                Client ID used to authenticate against OS2mo.  [env var: CLIENT_ID; required]
+  --client-secret TEXT            Client secret used to authenticate against OS2mo.  [env var: CLIENT_SECRET; required]
+  --config-file FILENAME          Path to initialisation config file.  [env var: CONFIG_FILE; default: /config/config.yml; required]
+  --log-level [CRITICAL|FATAL|ERROR|WARN|WARNING|INFO|DEBUG|NOTSET] Set the application log level  [env var: LOG_LEVEL; default: INFO]
+  --help                          Show this message and exit.
 ```
 
 For development, most users will probably want to use Docker Compose as follows:
@@ -32,15 +29,11 @@ services:
   mo-init:
     image: magentaaps/os2mo-init:latest
     environment:
-      AUTH_SERVER: "http://keycloak:8080/auth"
       MO_URL: "http://mo"
-      CLIENT_ID: "dipex"
-      CLIENT_SECRET: "603f1c82-d012-4d04-9382-dbe659c533fb"
+      AUTH_SERVER: "http://keycloak:8080/auth"
       AUTH_REALM: "mo"
-      LORA_URL: "http://mox"
-      LORA_CLIENT_ID: "dipex"
-      LORA_CLIENT_SECRET: "a091ed82-6e82-4efc-a8f0-001e2b127853"
-      LORA_AUTH_REALM: "lora"
+      CLIENT_ID: "d1fec000-baad-c0de-0000-004449504558"
+      CLIENT_SECRET: "603f1c82-d012-4d04-9382-dbe659c533fb"
     depends_on:
       mo:
         condition: service_healthy
@@ -60,14 +53,9 @@ services:
 
 Ad-hoc usage can be done as follows:
 ```bash
-docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml magentaaps/os2mo-init:latest --mo-url=<...>
+docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host magentaaps/os2mo-init:latest --mo-url="http://localhost:5000" --auth-server="http://localhost:8090/auth" --client-id=d1fec000-baad-c0de-0000-004449504558 --client-secret=hunter2 --auth-realm=mo
 ```
 Optionally with the `--network=host` or `--network=os2mo_default` docker flag.
-
-As LoRA is now hosted internally by MO, henceforth this command may be used as follows:
-```bash
-sudo docker run --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host --rm magentaaps/os2mo-init:latest --auth-server="http://localhost:8090/auth" --mo-url="http://localhost:5000" --client-id=dipex --client-secret=InsertSecret --auth-realm=mo --lora-url="http://localhost:5000/lora"
-```
 
 
 ## Deployment
