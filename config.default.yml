@@ -32,7 +32,10 @@ facets:
   org_unit_type: {}
   engagement_type: {}
   association_type: {}
-  role_type: {}
+  # "role_type" represents the old roles
+  # role_type: {}
+  # "role" represents the new roles
+  role: {}
   leave_type:
     Orlov:
       title: "Orlov"
