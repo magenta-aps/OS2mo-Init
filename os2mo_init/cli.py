@@ -128,6 +128,32 @@ async def run(
             await ensure_it_systems(graphql_session, config.it_systems)
 
         # Facets
+        # Even though facets are objects in the database equal to classes, they are
+        # hard-coded everywhere. For this reason, OS2mo-init will *always* create this
+        # expected set of facets.
+        facets = {
+            "address_property",
+            "association_type",
+            "engagement_job_function",
+            "engagement_type",
+            "kle_aspect",
+            "kle_number",
+            "leave_type",
+            "manager_address_type",
+            "manager_level",
+            "manager_type",
+            "org_unit_address_type",
+            "org_unit_hierarchy",
+            "org_unit_level",
+            "org_unit_type",
+            "primary_type",
+            "responsibility",
+            "role",
+            "time_planning",
+            "visibility",
+        }
+        await ensure_facets(graphql_session, facets)
+
+        # Classes
         if config.facets is not None:
-            await ensure_facets(graphql_session, set(config.facets.keys()))
             await ensure_classes(graphql_session, config.facets)

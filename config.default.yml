@@ -4,6 +4,8 @@
 root_organisation:
   municipality_code: null
 
+# Facets do not need to be configured explicitly; The expected set of facets, required
+# for an OS2mo installation, is automatically and always created.
 facets:
   # Common classes derived from the following places:
   #  - os2mo-data-import-and-export/tools/default_mo_setup.py:ensure_default_classes
@@ -26,23 +28,10 @@ facets:
     EmailEmployee:
       title: "Email"
       scope: "EMAIL"
-  manager_address_type: {}
-  address_property: {}
-  engagement_job_function: {}
-  org_unit_type: {}
-  engagement_type: {}
-  association_type: {}
-  # "role_type" represents the old roles
-  # role_type: {}
-  # "role" represents the new roles
-  role: {}
   leave_type:
     Orlov:
       title: "Orlov"
       scope: "TEXT"
-  manager_type: {}
-  responsibility: {}
-  manager_level: {}
   visibility:
     Intern:
       title: "Må vises internt"
@@ -53,8 +42,6 @@ facets:
     Secret:
       title: "Hemmelig"
       scope: "SECRET"
-  time_planning: {}
-  org_unit_level: {}
   primary_type:
     primary:
       title: "Primær"
@@ -65,9 +52,6 @@ facets:
     explicitly-primary:
       title: "Manuelt primær ansættelse"
       scope: "5000"
-  org_unit_hierarchy: {}
-  kle_number: {}
-  kle_aspect: {}
 
 #it_systems:
 #  AD: "Active Directory"
