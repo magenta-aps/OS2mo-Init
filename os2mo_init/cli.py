@@ -134,6 +134,7 @@ async def run(
         facets = {
             "address_property",
             "association_type",
+            "employee_address_type",
             "engagement_job_function",
             "engagement_type",
             "kle_aspect",
