@@ -1,0 +1,149 @@
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
+# SPDX-License-Identifier: MPL-2.0
+query FacetsQuery {
+  facets {
+    objects {
+      current {
+        user_key
+      }
+    }
+  }
+}
+
+mutation CreateFacetMutation($user_key: String!) {
+  facet_create(input: { user_key: $user_key, validity: { from: null } }) {
+    uuid
+  }
+}
+
+query ClassesQuery {
+  facets {
+    objects {
+      current {
+        uuid
+        user_key
+        classes {
+          uuid
+          user_key
+          name
+          scope
+          it_system {
+            uuid
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation CreateClassMutation(
+  $facet_uuid: UUID!
+  $user_key: String!
+  $name: String!
+  $scope: String
+  $it_system_uuid: UUID
+) {
+  class_create(
+    input: {
+      facet_uuid: $facet_uuid
+      user_key: $user_key
+      name: $name
+      scope: $scope
+      it_system_uuid: $it_system_uuid
+      validity: { from: null }
+    }
+  ) {
+    uuid
+  }
+}
+
+mutation UpdateClassMutation(
+  $facet_uuid: UUID!
+  $uuid: UUID!
+  $user_key: String!
+  $name: String!
+  $scope: String
+  $it_system_uuid: UUID
+) {
+  class_update(
+    input: {
+      uuid: $uuid
+      facet_uuid: $facet_uuid
+      user_key: $user_key
+      name: $name
+      scope: $scope
+      it_system_uuid: $it_system_uuid
+      validity: { from: null }
+    }
+  ) {
+    uuid
+  }
+}
+
+query ITSystemsQuery {
+  itsystems {
+    objects {
+      current {
+        uuid
+        user_key
+        name
+      }
+    }
+  }
+}
+
+mutation CreateITSystemMutation($user_key: String!, $name: String!) {
+  itsystem_create(
+    input: { user_key: $user_key, name: $name, validity: { from: null } }
+  ) {
+    uuid
+  }
+}
+
+mutation UpdateITSystemMutation(
+  $uuid: UUID!
+  $user_key: String!
+  $name: String!
+) {
+  itsystem_update(
+    input: {
+      uuid: $uuid
+      user_key: $user_key
+      name: $name
+      validity: { from: null }
+    }
+  ) {
+    uuid
+  }
+}
+
+query RootOrgQuery {
+  org {
+    uuid
+    municipality_code
+  }
+}
+
+mutation RootOrgCreate($municipality_code: Int) {
+  org_create(input: { municipality_code: $municipality_code }) {
+    uuid
+  }
+}
+
+query __testing_get_class($user_key: String!) {
+  classes(filter: { user_keys: [$user_key], from_date: null, to_date: null }) {
+    objects {
+      current {
+        facet {
+          user_key
+        }
+        user_key
+        name
+        scope
+        it_system {
+          user_key
+        }
+      }
+    }
+  }
+}

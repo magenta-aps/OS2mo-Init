@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2021 Magenta ApS
+# SPDX-License-Identifier: MPL-2.0
+services:
+  init: &init
+    build: .
+    environment: &init-env
+      MO_URL: "http://mo:5000"
+      CLIENT_ID: "dipex"
+      CLIENT_SECRET: "603f1c82-d012-4d04-9382-dbe659c533fb"
+      AUTH_SERVER: "http://keycloak:8080/auth"
+      AUTH_REALM: "mo"
+    volumes:
+      - type: bind
+        source: ./init.config.yml
+        target: /config/config.yml
+        read_only: true
+
+  test:
+    <<: *init
+    entrypoint: ["sleep", "inf"]
+    environment:
+      <<: *init-env
+      # Required for FastRAMQPI integration tests - automatically set in CI by
+      # the template.
+      LOG_LEVEL: "DEBUG"
+      FASTRAMQPI__MO_URL: "http://mo:5000"
+      FASTRAMQPI__CLIENT_ID: "dipex"
+      FASTRAMQPI__CLIENT_SECRET: "603f1c82-d012-4d04-9382-dbe659c533fb"
+      FASTRAMQPI__AUTH_SERVER: "http://keycloak:8080/auth"
+      FASTRAMQPI__AUTH_REALM: "mo"
+      FASTRAMQPI__AMQP__URL: "amqp://guest:guest@msg-broker:5672/"
+      FASTRAMQPI__DATABASE__USER: "fastramqpi"
+      FASTRAMQPI__DATABASE__PASSWORD: "fastramqpi"
+      FASTRAMQPI__DATABASE__HOST: "db"
+      FASTRAMQPI__DATABASE__NAME: "fastramqpi"
+    volumes:
+      - ./os2mo_init/:/app/os2mo_init/:ro
+      - ./tests/:/app/tests/:ro
+    tmpfs:
+      - /app/.pytest_cache/
+
+networks:
+  default:
+    external: true
+    name: os2mo_default

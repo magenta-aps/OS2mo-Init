@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-import logging
-from io import TextIOWrapper
+from pathlib import Path
 from typing import ItemsView
 
-import structlog
 import yaml
+from fastramqpi.config import ClientSettings
+from fastramqpi.config import FastAPIIntegrationSystemSettings
 from pydantic import BaseModel
+from pydantic import FilePath
 
 
 class ConfigRootOrganisation(BaseModel):
@@ -26,20 +27,21 @@ class ConfigFacet(BaseModel):
         return self.__root__.items()
 
 
-class Config(BaseModel):
+class ConfigFile(BaseModel):
     root_organisation: ConfigRootOrganisation | None
     facets: dict[str, ConfigFacet] | None
     it_systems: dict[str, str] | None
 
 
-def get_config(config_file: TextIOWrapper) -> Config:
-    config_yaml = yaml.safe_load(config_file)
-    config = Config.parse_obj(config_yaml)
+def get_config_file(config_file: Path) -> ConfigFile:
+    with config_file.open() as f:
+        config_yaml = yaml.safe_load(f)
+    config = ConfigFile.parse_obj(config_yaml)
     return config
 
 
-def set_log_level(log_level_name: str) -> None:
-    log_level_value = logging.getLevelName(log_level_name)
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(log_level_value)
-    )
+class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
+    class Config:
+        frozen = True
+
+    config_file: FilePath = Path("/config/config.yml")

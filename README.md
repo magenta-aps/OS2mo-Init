@@ -8,28 +8,13 @@ SPDX-License-Identifier: MPL-2.0
 
 ## Usage
 The primary usage of the tool is to initialise OS2mo's database with a root organisation, all required classes,
-recommended facets, and IT systems.
-```text
-Usage: python -m os2mo_init [OPTIONS]
-
-Options:
-  --mo-url TEXT                   OS2mo URL.  [env var: MO_URL; required]
-  --auth-server TEXT              Keycloak authentication server.  [env var: AUTH_SERVER; required]
-  --auth-realm TEXT               Keycloak realm for OS2mo authentication.  [env var: AUTH_REALM; required]
-  --client-id TEXT                Client ID used to authenticate against OS2mo.  [env var: CLIENT_ID; required]
-  --client-secret TEXT            Client secret used to authenticate against OS2mo.  [env var: CLIENT_SECRET; required]
-  --config-file FILENAME          Path to initialisation config file.  [env var: CONFIG_FILE; default: /config/config.yml; required]
-  --log-level [CRITICAL|FATAL|ERROR|WARN|WARNING|INFO|DEBUG|NOTSET] Set the application log level  [env var: LOG_LEVEL; default: INFO]
-  --help                          Show this message and exit.
-```
-
-For development, most users will probably want to use Docker Compose as follows:
+recommended facets, and IT systems. For development, most users will probably want to use Docker Compose as follows:
 ```yaml
 services:
   mo-init:
     image: magentaaps/os2mo-init:latest
     environment:
-      MO_URL: "http://mo"
+      MO_URL: "http://mo:5000"
       AUTH_SERVER: "http://keycloak:8080/auth"
       AUTH_REALM: "mo"
       CLIENT_ID: "dipex"
@@ -53,7 +38,7 @@ services:
 
 Ad-hoc usage can be done as follows:
 ```bash
-docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host magentaaps/os2mo-init:latest --mo-url="http://localhost:5000" --auth-server="http://localhost:8090/auth" --client-id=dipex --client-secret=hunter2 --auth-realm=mo
+docker run --rm --mount type=bind,source="$(pwd)"/init.config.yml,destination=/config/config.yml --network=host -e MO_URL='http://localhost:5000' -e CLIENT_ID='dipex' -e CLIENT_SECRET='603f1c82-d012-4d04-9382-dbe659c533fb' -e AUTH_SERVER='http://localhost:5000/auth' -e AUTH_REALM='mo' magentaaps/os2mo-init:latest
 ```
 Optionally with the `--network=host` or `--network=os2mo_default` docker flag.
 
