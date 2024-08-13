@@ -39,6 +39,13 @@ services:
     tmpfs:
       - /app/.pytest_cache/
 
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: "fastramqpi"
+      POSTGRES_PASSWORD: "fastramqpi"
+      POSTGRES_DB: "fastramqpi"
+
 networks:
   default:
     external: true
