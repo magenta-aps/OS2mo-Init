@@ -4,6 +4,7 @@ query FacetsQuery {
   facets {
     objects {
       current {
+        uuid
         user_key
       }
     }
@@ -13,26 +14,6 @@ query FacetsQuery {
 mutation CreateFacetMutation($user_key: String!) {
   facet_create(input: { user_key: $user_key, validity: { from: null } }) {
     uuid
-  }
-}
-
-query ClassesQuery {
-  facets {
-    objects {
-      current {
-        uuid
-        user_key
-        classes {
-          uuid
-          user_key
-          name
-          scope
-          it_system {
-            uuid
-          }
-        }
-      }
-    }
   }
 }
 
@@ -130,17 +111,26 @@ mutation RootOrgCreate($municipality_code: Int) {
   }
 }
 
-query __testing_get_class($user_key: String!) {
-  classes(filter: { user_keys: [$user_key], from_date: null, to_date: null }) {
+query get_class($facet_user_key: String!, $class_user_key: String!) {
+  classes(
+    filter: {
+      user_keys: [$class_user_key]
+      from_date: null
+      to_date: null
+      facet: { user_keys: [$facet_user_key] }
+    }
+  ) {
     objects {
       current {
         facet {
           user_key
         }
+        uuid
         user_key
         name
         scope
         it_system {
+          uuid
           user_key
         }
       }
